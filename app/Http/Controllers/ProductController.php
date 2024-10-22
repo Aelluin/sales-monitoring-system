@@ -60,7 +60,8 @@ class ProductController extends Controller
      */
     public function edit(string $id)
     {
-        // You will implement this later
+        $product = Product::findOrFail($id); // Find the product by ID
+    return view('products.edit', compact('product')); // Pass the product to the edit view
     }
 
     /**
@@ -68,7 +69,19 @@ class ProductController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        // You will implement this later
+        // Validate the request data
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric',
+            'quantity' => 'required|integer',
+            'description' => 'nullable|string',
+        ]);
+
+        $product = Product::findOrFail($id); // Find the product by ID
+        $product->update($request->all()); // Update the product with the request data
+
+        // Redirect to the products index page with a success message
+        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
     }
 
     /**
