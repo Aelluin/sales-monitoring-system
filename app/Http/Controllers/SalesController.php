@@ -31,6 +31,11 @@ class SalesController extends Controller
             return redirect()->back()->with('error', 'Not enough stock for this product.');
         }
 
+        if ($product->quantity <= $product->low_stock_threshold) {
+            // Notify user that the stock is low
+            return redirect()->back()->with('error', 'Stock is low for this product!');
+        }
+
         // Calculate total price
         $totalPrice = $product->price * $quantity;
 
