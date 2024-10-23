@@ -35,11 +35,11 @@
         /* Highlight section for best-selling products */
         .highlight-section {
             max-width: 900px;
-            margin: 20px auto; /* Center the section */
+            margin: 20px auto;
             padding: 20px;
-            background-color: #b7dfff; /* Soft light blue background */
+            background-color: #b7dfff;
             border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
         .highlight-section h3 {
@@ -53,12 +53,12 @@
             border-radius: 8px;
             padding: 10px;
             margin: 10px 0;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); /* Light shadow */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
             transition: box-shadow 0.3s ease;
         }
 
         .product-card:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Shadow on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .product-card p {
@@ -71,16 +71,16 @@
         table {
             width: 100%;
             max-width: 800px;
-            margin: 20px auto; /* Center table */
+            margin: 20px auto;
             border-collapse: collapse;
             background-color: #fff;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for table */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         th, td {
-            text-align: center; /* Center content */
+            text-align: center;
             padding: 12px 15px;
-            border: 1px solid #ddd; /* Border for cells */
+            border: 1px solid #ddd;
             font-size: 14px;
         }
 
@@ -90,12 +90,12 @@
         }
 
         tr:nth-child(even) {
-            background-color: #f9f9f9; /* Alternate row color */
+            background-color: #f9f9f9;
         }
 
         /* Hover effect for table rows */
         tr:hover {
-            background-color: #eaf6ff; /* Light blue on hover */
+            background-color: #eaf6ff;
             transition: background-color 0.3s ease;
         }
 
@@ -135,7 +135,7 @@
                 <td>{{ $sale->product->name }}</td>
                 <td>{{ $sale->quantity }}</td>
                 <td>₱{{ number_format($sale->total_price, 2) }}</td>
-                <td>{{ $sale->created_at }}</td>
+                <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Date formatted -->
             </tr>
         @endforeach
     </table>

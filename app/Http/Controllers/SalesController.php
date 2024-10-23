@@ -58,9 +58,13 @@ class SalesController extends Controller
     // Show all sales (Optional, for reporting)
     public function index()
     {
-        $sales = Sale::with('product')->get(); // Eager load related product data
-        return view('sales.index', compact('sales')); // Pass sales data to the view
+         // Retrieve all sales, including product details, and sort by latest sales first
+    $sales = Sale::with('product')->orderBy('created_at', 'desc')->get();
+
+    return view('sales.index', compact('sales'));
     }
+
+
     public function report()
 {
     // Get all sales with product details

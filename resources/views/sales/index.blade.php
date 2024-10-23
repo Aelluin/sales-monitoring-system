@@ -90,11 +90,11 @@
                 <th>Product Name</th>
                 <th>Quantity Sold</th>
                 <th>Total Price</th>
-                <th>Sale Date</th> <!-- Added header for Sale Date -->
+                <th>Sale Date</th> <!-- Sale Date Column -->
             </tr>
         </thead>
         <tbody>
-            @if ($sales->isEmpty()) <!-- Check if there are no sales -->
+            @if ($sales->isEmpty())
                 <tr>
                     <td colspan="4">No sales recorded.</td>
                 </tr>
@@ -104,7 +104,7 @@
                         <td>{{ $sale->product->name }}</td>
                         <td>{{ $sale->quantity }}</td>
                         <td>&#8369;{{ number_format($sale->total_price, 2) }}</td>
-                        <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Format the date -->
+                        <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Format sale date -->
                     </tr>
                 @endforeach
             @endif
