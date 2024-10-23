@@ -3,82 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>All Sales</title>
+    <title>Sales Management</title> <!-- Updated title -->
     <style>
         /* General body and font styling */
         body {
             font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
             margin: 0;
             padding: 20px;
-            background-color: #f4f4f9; /* Light background for better contrast */
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #333;
         }
 
         h1 {
-            text-align: center; /* Center the title */
-            color: #333; /* Darker color for the title */
-            margin-bottom: 30px; /* Space below the title */
-            font-size: 30px; /* Larger title font size */
+            margin-bottom: 20px;
         }
 
+        h2 {
+            margin-top: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Table styling */
         table {
             width: 100%;
+            max-width: 800px; /* Limit the width for better readability */
+            margin: 20px auto;
             border-collapse: collapse;
-            margin-bottom: 20px;
-            background-color: #fff; /* White background for the table */
-            border-radius: 8px; /* Rounded corners */
-            overflow: hidden; /* Prevents border radius from being cut off */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         th, td {
-            padding: 12px; /* Increased padding for better spacing */
-            text-align: center; /* Centered content in table cells */
-            border-bottom: 1px solid #e0e0e0; /* Lighter bottom border */
+            text-align: center;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            font-size: 14px;
         }
 
         th {
-            background-color: #dbdbdb; /* Light gray for header background */
-            color: #333; /* Darker color for header text */
+            background-color: #3498db; /* Blue header */
+            color: white;
         }
 
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Alternate row colors */
+        }
+
+        /* Hover effect for table rows */
         tr:hover {
-            background-color: #f1f1f1; /* Light gray background on row hover */
+            background-color: #eaf6ff; /* Light blue on hover */
+            transition: background-color 0.3s ease;
         }
 
         .success {
-            color: #28a745; /* Green color for success messages */
+            color: #28a745; /* Green for success messages */
             margin-bottom: 15px;
             text-align: center; /* Center success message */
             font-size: 16px; /* Slightly larger font size */
         }
 
-        a {
+        /* Button table styling */
+        .button-table {
+            margin: 20px auto; /* Center the button table */
+            text-align: center; /* Center align the buttons */
+        }
+
+        .button {
             text-decoration: none;
             color: white; /* White text color for button */
             padding: 12px 20px; /* Padding for button-like appearance */
-            background-color: #007bff; /* Blue background for button */
             border-radius: 4px; /* Rounded corners */
             display: inline-block; /* Make it a block for spacing */
             transition: background-color 0.3s; /* Smooth background color transition */
-            margin: 0 auto; /* Center the link */
-            text-align: center; /* Center text in link */
             font-weight: bold; /* Bold font for the button */
+            margin: 10px; /* Margin for spacing between buttons */
         }
 
-        a:hover {
-            background-color: #0056b3; /* Darker on hover */
-            text-decoration: none; /* No underline on hover */
+        .button-blue {
+            background-color: #007bff; /* Blue background for the report button */
         }
 
-        .button-table {
-            margin: 0 auto; /* Center the button table */
-            text-align: center; /* Center align the buttons */
-            margin-top: 20px; /* Space above button table */
+        .button-blue:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        .button-green {
+            background-color: #28a745; /* Green background for the create new sale button */
+        }
+
+        .button-green:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+
+        .button-gray {
+            background-color: #6c757d; /* Gray background for the back button */
+        }
+
+        .button-gray:hover {
+            background-color: #5a6268; /* Darker gray on hover */
         }
     </style>
 </head>
 <body>
-    <h1>All Sales</h1>
+    <h1>Sales Management</h1> <!-- Updated title -->
 
     @if(session('success'))
         <div class="success">{{ session('success') }}</div>
@@ -87,24 +118,24 @@
     <table>
         <thead>
             <tr>
-                <th>Product Name</th>
+                <th>Product</th>
                 <th>Quantity Sold</th>
                 <th>Total Price</th>
-                <th>Sale Date</th> <!-- Sale Date Column -->
+                <th>Date of Sale</th>
             </tr>
         </thead>
         <tbody>
             @if ($sales->isEmpty())
                 <tr>
-                    <td colspan="4">No sales recorded.</td>
+                    <td colspan="4">No sales recorded.</td> <!-- Updated message -->
                 </tr>
             @else
                 @foreach ($sales as $sale)
                     <tr>
                         <td>{{ $sale->product->name }}</td>
                         <td>{{ $sale->quantity }}</td>
-                        <td>&#8369;{{ number_format($sale->total_price, 2) }}</td>
-                        <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Format sale date -->
+                        <td>₱{{ number_format($sale->total_price, 2) }}</td>
+                        <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Formatted date -->
                     </tr>
                 @endforeach
             @endif
@@ -112,7 +143,9 @@
     </table>
 
     <div class="button-table">
-        <a href="{{ route('sales.create') }}">Create New Sale</a>
+        <a class="button button-green" href="{{ route('sales.create') }}">Add New Sale</a> <!-- Updated button text -->
+        <a class="button button-blue" href="{{ route('sales.report') }}">View Sales Report</a> <!-- Updated button text -->
+        <a class="button button-gray" href="{{ route('products.index') }}">Back to Products</a> <!-- New Back button -->
     </div>
 </body>
 </html>

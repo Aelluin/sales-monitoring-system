@@ -67,8 +67,8 @@ class SalesController extends Controller
 
     public function report()
 {
-    // Get all sales with product details
-    $sales = Sale::with('product')->get();
+    // Get all sales with product details, ordered by created_at in descending order
+    $sales = Sale::with('product')->orderBy('created_at', 'desc')->get();
 
     // Calculate total revenue
     $totalRevenue = $sales->sum('total_price');
@@ -83,5 +83,6 @@ class SalesController extends Controller
 
     return view('sales.report', compact('sales', 'totalRevenue', 'bestSellingProducts'));
 }
+
 
 }

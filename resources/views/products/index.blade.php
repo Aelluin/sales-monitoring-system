@@ -20,19 +20,19 @@
         }
 
         /* Success and error messages */
-        div {
+        .success, .error {
             padding: 10px;
             margin-bottom: 20px;
             text-align: center;
             border-radius: 4px;
         }
 
-        div.success {
+        .success {
             background-color: #2ecc71;
             color: white;
         }
 
-        div.error {
+        .error {
             background-color: #e74c3c;
             color: white;
         }
@@ -98,19 +98,25 @@
         }
 
         /* Link for creating new product */
-        .create-product {
+        .create-product, .view-sales {
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
-            background-color: #27ae60;
+            background-color: #27ae60; /* Green for create button */
             color: white;
             text-align: center;
             border-radius: 4px;
             text-decoration: none;
+            transition: background-color 0.3s ease;
         }
 
-        .create-product:hover {
-            background-color: #219150;
+        .create-product:hover, .view-sales:hover {
+            background-color: #219150; /* Darker green on hover */
+        }
+
+        .view-sales {
+            background-color: #3498db; /* Blue for view sales button */
+            margin-left: 10px; /* Add some spacing between buttons */
         }
     </style>
 </head>
@@ -134,7 +140,7 @@
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Description</th>
-                <th>Stock Status</th> <!-- Added column for stock status -->
+                <th>Stock Status</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -142,11 +148,10 @@
             @foreach ($products as $product)
                 <tr>
                     <td>{{ $product->name }}</td>
-                    <td>₱{{ number_format($product->price, 2) }}</td> <!-- Added Peso Sign and formatted price -->
+                    <td>₱{{ number_format($product->price, 2) }}</td>
                     <td>{{ $product->quantity }}</td>
                     <td>{{ $product->description }}</td>
                     <td>
-                        <!-- Check for stock threshold -->
                         @if($product->quantity <= $product->low_stock_threshold)
                             <span class="low-stock">Low Stock</span>
                         @else
@@ -154,10 +159,7 @@
                         @endif
                     </td>
                     <td class="action-buttons">
-                        <!-- Edit link -->
                         <a href="{{ route('products.edit', $product->id) }}">Edit</a>
-
-                        <!-- Delete form -->
                         <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;">
                             @csrf
                             @method('DELETE')
@@ -170,5 +172,6 @@
     </table>
 
     <a href="{{ route('products.create') }}" class="create-product">Create New Product</a>
+    <a href="{{ route('sales.index') }}" class="view-sales">View Sales</a> <!-- Button to view sales -->
 </body>
 </html>

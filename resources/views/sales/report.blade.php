@@ -104,6 +104,35 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* Button styling */
+        .button {
+            display: inline-block;
+            margin: 10px; /* Margin for spacing between buttons */
+            padding: 12px 20px;
+            color: white; /* White text color */
+            text-decoration: none; /* No underline */
+            border-radius: 4px; /* Rounded corners */
+            font-weight: bold; /* Bold font */
+            text-align: center; /* Center text */
+            transition: background-color 0.3s; /* Smooth background color transition */
+        }
+
+        .button-blue {
+            background-color: #007bff; /* Blue background */
+        }
+
+        .button-blue:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+        .button-green {
+            background-color: #28a745; /* Green background */
+        }
+
+        .button-green:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
     </style>
 </head>
 <body>
@@ -139,6 +168,12 @@
             </tr>
         @endforeach
     </table>
+
+    <!-- Button section -->
+    <div class="button-table" style="text-align: center;">
+        <a class="button button-blue" href="{{ route('sales.index') }}">Back to Sales</a>
+        <a class="button button-green" href="{{ route('sales.report') }}">View Sales Report</a> <!-- Change route to the actual report route -->
+    </div>
 
 </body>
 </html>
