@@ -113,7 +113,7 @@
         <div class="success-message">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('products.update', $product->id) }}" method="POST">
+    <form action="{{ route('products.update', $product->id) }}" method="POST" id="edit-product-form">
         @csrf
         @method('PUT') <!-- This is important for update method -->
 
@@ -133,6 +133,7 @@
     <table class="button-table">
         <tr>
             <td>
+                <!-- Keeping the button outside the form, but ensuring the correct form ID is referenced -->
                 <button type="submit" form="edit-product-form">Update Product</button>
             </td>
         </tr>
@@ -142,10 +143,5 @@
             </td>
         </tr>
     </table>
-
-    <form id="edit-product-form" action="{{ route('products.update', $product->id) }}" method="POST" style="display:none;">
-        @csrf
-        @method('PUT') <!-- This is important for update method -->
-    </form>
 </body>
 </html>
