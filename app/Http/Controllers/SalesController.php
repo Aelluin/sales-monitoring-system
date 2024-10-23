@@ -61,4 +61,23 @@ class SalesController extends Controller
         $sales = Sale::with('product')->get(); // Eager load related product data
         return view('sales.index', compact('sales')); // Pass sales data to the view
     }
+    public function report()
+{
+    // Get all sales with product details
+    $sales = Sale::with('product')->get();
+
+    // Calculate total revenue
+    $totalRevenue = $sales->sum('total_price');
+
+    // Get best-selling products
+    $bestSellingProducts = Sale::selectRaw('product_id, SUM(quantity) as total_quantity')
+        ->groupBy('product_id')
+        ->orderByDesc('total_quantity')
+        ->with('product')
+        ->take(5)
+        ->get();
+
+    return view('sales.report', compact('sales', 'totalRevenue', 'bestSellingProducts'));
+}
+
 }
