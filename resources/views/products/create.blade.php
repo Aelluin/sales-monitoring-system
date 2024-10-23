@@ -113,7 +113,7 @@
         <div class="success-message">{{ session('success') }}</div>
     @endif
 
-    <form action="{{ route('products.store') }}" method="POST">
+    <form id="create-product-form" action="{{ route('products.store') }}" method="POST">
         @csrf
         <label for="name">Name:</label>
         <input type="text" name="name" id="name" required>
@@ -126,23 +126,19 @@
 
         <label for="description">Description:</label>
         <textarea name="description" id="description"></textarea>
-    </form>
 
-    <table class="button-table">
-        <tr>
-            <td>
-                <button type="submit" form="create-product-form">Create Product</button>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ route('products.index') }}" class="back-link">Back to Products</a>
-            </td>
-        </tr>
-    </table>
-
-    <form id="create-product-form" action="{{ route('products.store') }}" method="POST" style="display:none;">
-        @csrf
+        <table class="button-table">
+            <tr>
+                <td>
+                    <button type="submit">Create Product</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="{{ route('products.index') }}" class="back-link">Back to Products</a>
+                </td>
+            </tr>
+        </table>
     </form>
 </body>
 </html>

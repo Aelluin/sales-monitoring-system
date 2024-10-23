@@ -18,22 +18,25 @@ class SalesController extends Controller
     // Process the sale and update inventory
     public function store(Request $request)
     {
+        // Validate incoming request data
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
+        // Fetch the product with the specified product_id
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity;
 
         // Check if the product has enough quantity in stock
         if ($quantity > $product->quantity) {
-            return redirect()->back()->with('error', 'Not enough stock for this product.');
+            return redirect()->back()->with('error', 'Not enough stock for this product.'); // Stock insufficient
         }
 
-        if ($product->quantity <= $product->low_stock_threshold) {
-            // Notify user that the stock is low
-            return redirect()->back()->with('error', 'Stock is low for this product!');
+        // Check if the stock is low and notify the user, but allow the sale
+        if ($product->quantity < $product->low_stock_threshold) {
+            // Notify about low stock but still allow the sale to process
+            session()->flash('warning', 'Stock is low for this product!'); // Flash a warning message
         }
 
         // Calculate total price
@@ -47,17 +50,15 @@ class SalesController extends Controller
         ]);
 
         // Update the product quantity (subtract the sold quantity)
-        $product->update([
-            'quantity' => $product->quantity - $quantity,
-        ]);
+        $product->decrement('quantity', $quantity); // More efficient way to update quantity
 
-        return redirect()->route('sales.index')->with('success', 'Sale processed successfully!');
+        return redirect()->route('sales.index')->with('success', 'Sale processed successfully!'); // Success message
     }
 
     // Show all sales (Optional, for reporting)
     public function index()
     {
-        $sales = Sale::with('product')->get();
-        return view('sales.index', compact('sales'));
+        $sales = Sale::with('product')->get(); // Eager load related product data
+        return view('sales.index', compact('sales')); // Pass sales data to the view
     }
 }
