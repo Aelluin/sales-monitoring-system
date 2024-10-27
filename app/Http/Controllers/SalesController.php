@@ -58,10 +58,11 @@ class SalesController extends Controller
     // Show all sales (Optional, for reporting)
     public function index()
     {
-         // Retrieve all sales, including product details, and sort by latest sales first
-    $sales = Sale::with('product')->orderBy('created_at', 'desc')->get();
+         // Retrieve sales data with pagination, including product details, and sort by latest sales first
+         $sales = Sale::with('product')->orderBy('created_at', 'desc')->paginate(15);
 
-    return view('sales.index', compact('sales'));
+         return view('sales.index', compact('sales'));
+
     }
 
 
