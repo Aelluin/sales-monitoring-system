@@ -98,7 +98,7 @@
                 <!-- Button section -->
                 <div class="text-center">
                     <a class="inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200" href="{{ route('sales.index') }}">Back to Sales</a>
-                    <a class="inline-block px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition duration-200" href="{{ route('sales.report') }}">View Sales Report</a>
+
                 </div>
             </main>
         </div>

@@ -135,11 +135,11 @@
                     <span class="material-icons mr-4 text-xl">dashboard</span>
                     <span x-show="open" class="flex-1 text-base">Dashboard</span>
                 </a>
-                <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200"> <!-- Changed to active -->
                     <span class="material-icons mr-4 text-xl">inventory</span>
                     <span x-show="open" class="flex-1 text-base">Products</span>
                 </a>
-                <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
+                <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
                     <span class="material-icons mr-4 text-xl">show_chart</span>
                     <span x-show="open" class="flex-1 text-base">Sales</span>
                 </a>
