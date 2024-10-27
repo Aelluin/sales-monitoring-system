@@ -13,7 +13,6 @@ class SalesController extends Controller
     {
         $products = Product::all(); // Get all products
         return view('sales.create', compact('products')); // Pass products to the view
-
     }
 
     // Process the sale and update inventory
@@ -36,7 +35,6 @@ class SalesController extends Controller
 
         // Check if the stock is low and notify the user, but allow the sale
         if ($product->quantity < $product->low_stock_threshold) {
-            // Notify about low stock but still allow the sale to process
             session()->flash('warning', 'Stock is low for this product!'); // Flash a warning message
         }
 
@@ -59,21 +57,35 @@ class SalesController extends Controller
     // Show all sales (Optional, for reporting)
     public function index()
     {
-         // Retrieve sales data with pagination, including product details, and sort by latest sales first
-         $sales = Sale::with('product')->orderBy('created_at', 'desc')->paginate(15);
-
-         return view('sales.index', compact('sales'));
-
+        // Retrieve sales data with pagination, including product details, and sort by latest sales first
+        $sales = Sale::with('product')->orderBy('created_at', 'desc')->paginate(15);
+        return view('sales.index', compact('sales'));
     }
 
-
+    // Generate report for monthly sales and other metrics
     public function report()
 {
-    // Get all sales with product details, ordered by created_at in descending order
-    $sales = Sale::with('product')->orderBy('created_at', 'desc')->get();
+    // Get monthly sales data
+    $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
+        ->groupBy('month')
+        ->orderBy('month')
+        ->get();
+
+    // Prepare data for the graph
+    $monthlyData = [];
+    foreach ($monthlySales as $sale) {
+        $monthlyData[$sale->month] = $sale->total_sales;
+    }
+
+    // Fill in missing months with zero sales
+    for ($month = 1; $month <= 12; $month++) {
+        if (!isset($monthlyData[$month])) {
+            $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+        }
+    }
 
     // Calculate total revenue
-    $totalRevenue = $sales->sum('total_price');
+    $totalRevenue = Sale::sum('total_price');
 
     // Get best-selling products
     $bestSellingProducts = Sale::selectRaw('product_id, SUM(quantity) as total_quantity')
@@ -83,8 +95,8 @@ class SalesController extends Controller
         ->take(5)
         ->get();
 
-    return view('sales.report', compact('sales', 'totalRevenue', 'bestSellingProducts'));
+    // Pass the monthly data for the chart and other report data to the view
+    return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts'));
 }
-
 
 }
