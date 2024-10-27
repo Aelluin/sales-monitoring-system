@@ -43,6 +43,7 @@ Route::get('/dashboard/products/{id}/edit', [ProductController::class, 'edit'])-
 // Sales creation and editing
 Route::get('/dashboard/sales/create', [SalesController::class, 'create'])->name('dashboard.sales.create');
 Route::get('/dashboard/sales/{id}/edit', [SalesController::class, 'edit'])->name('dashboard.sales.edit'); // Pass the sales ID
+Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
 
 
 });
