@@ -31,6 +31,18 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report');
 
+// In web.php (or your routing file)
+
+// Dashboard and main pages
+
+
+// Product creation and editing
+Route::get('/dashboard/products/create', [ProductController::class, 'create'])->name('dashboard.products.create');
+Route::get('/dashboard/products/{id}/edit', [ProductController::class, 'edit'])->name('dashboard.products.edit'); // Pass the product ID
+
+// Sales creation and editing
+Route::get('/dashboard/sales/create', [SalesController::class, 'create'])->name('dashboard.sales.create');
+Route::get('/dashboard/sales/{id}/edit', [SalesController::class, 'edit'])->name('dashboard.sales.edit'); // Pass the sales ID
 
 
 });
