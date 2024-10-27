@@ -14,13 +14,18 @@
     <div class="flex h-screen font-sans bg-gray-100">
 
         <!-- Collapsible Sidebar -->
-        <div x-data="{ open: true }" :class="open ? 'w-64' : 'w-20'" class="flex flex-col bg-blue-800 text-gray-200 transition-all duration-300 shadow-lg h-full">
+        <div x-data="{ open: true }" :class="open ? 'w-64' : 'w-20'" class="flex flex-col" style="background-color: #15151D; color: #ffffff;">
             <!-- Sidebar Header with Collapse Button -->
             <div class="flex items-center justify-between p-4 border-b border-blue-700">
-                <span x-show="open" class="text-2xl font-bold tracking-wide">My Dashboard</span>
+                <div class="flex justify-center w-full"> <!-- Center the content here -->
+                    <img
+                        x-show="open"
+                        src="{{ asset('img/gg.png') }}"
+                        alt="My Dashboard"
+                        class="h-14 w-50 object-contain mx-auto" /> <!-- Add mx-auto for centering -->
+                </div>
                 <button @click="open = !open" class="text-gray-400 hover:text-white focus:outline-none">
-                    <span x-show="open">☰</span>
-                    <span x-show="!open">☰</span>
+                    <span class="material-icons text-2xl">menu</span> <!-- Increased icon size -->
                 </button>
             </div>
 
@@ -48,7 +53,7 @@
         <!-- Main Content Area -->
         <div class="flex-1 flex flex-col">
             <!-- User Info Header Only -->
-            <header class="bg-white shadow px-6 py-4 border-b border-gray-200 flex justify-end items-center">
+            <header class="bg-white shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
                 <!-- User Info Section - Keeps the Laravel Breeze functionality -->
                 <div class="flex items-center space-x-4">
                     <div x-data="{ open: false }" class="relative">
@@ -80,7 +85,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </header>
 
