@@ -3,151 +3,204 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create New Sale</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Create Sales</title>
     <style>
-        /* General body and font styling */
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9; /* Light background for better contrast */
-            margin: 0;
-            padding: 20px;
+        /* General Styling for Success and Error Messages */
+        .success, .error {
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 4px;
         }
 
-        h1 {
-            text-align: center; /* Center the title */
-            color: #333; /* Darker color for the title */
-            margin-bottom: 15px; /* Space below the title */
+        .success {
+            background-color: #2ecc71; /* Green */
+            color: white;
         }
 
-        /* Error message styling */
         .error {
-            text-align: center; /* Center error message */
-            color: red; /* Error color */
-            margin-bottom: 15px; /* Space below error message */
-            font-size: 16px; /* Font size for error message */
+            background-color: #e74c3c; /* Red */
+            color: white;
         }
 
-        /* Form styling */
+        /* General Styles */
+        body {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        header {
+            background-color: #f8f8f8;
+            color: #333333;
+        }
+
+        /* Form Styling */
         form {
-            max-width: 500px; /* Set a max width for the form */
-            margin: 0 auto; /* Center the form on the page */
-            background-color: #fff; /* White background for the form */
-            padding: 25px; /* Padding inside the form */
-            border-radius: 8px; /* Rounded corners */
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
 
         label {
-            display: block; /* Block display for labels */
-            margin-bottom: 5px; /* Space below labels */
-            font-weight: bold; /* Bold labels */
-            font-size: 14px; /* Smaller font size */
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
-        select, input[type="number"] {
-            width: 100%; /* Full width for inputs */
-            max-width: 100%; /* Prevent exceeding the form width */
-            padding: 8px; /* Consistent padding */
-            margin-bottom: 15px; /* Space below inputs */
-            border: 1px solid #ccc; /* Border for inputs */
-            border-radius: 4px; /* Rounded corners */
-            font-size: 14px; /* Font size for inputs */
-            box-sizing: border-box; /* Include padding and border in the element's total width */
-        }
-
-        button {
+        input[type="text"],
+        input[type="number"],
+        textarea {
             width: 100%;
-            padding: 8px; /* Reduced padding */
-            background-color: #3498db;
-            color: white;
-            border: none;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
             border-radius: 4px;
-            font-size: 14px; /* Smaller font size */
-            cursor: pointer;
+            font-size: 14px;
+        }
+
+        /* Action Button Styling */
+        .create-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #27ae60; /* Green */
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
             transition: background-color 0.3s ease;
         }
 
-        button:hover {
-            background-color: #2980b9; /* Darker blue on hover */
+        .create-button:hover {
+            background-color: #219150; /* Darker Green */
         }
 
-        /* Link to go back to products */
         .back-link {
-            display: block;
-            text-align: center;
+            display: inline-block;
+            margin-top: 10px;
             text-decoration: none;
-            padding: 8px; /* Reduced padding */
-            background-color: #27ae60;
+            padding: 10px 20px;
+            background-color: #3498db; /* Blue */
             color: white;
             border-radius: 4px;
-            font-size: 14px; /* Smaller font size */
+            transition: background-color 0.3s ease;
         }
 
         .back-link:hover {
-            background-color: #219150; /* Darker green on hover */
-        }
-
-        /* Table for buttons */
-        .button-table {
-            margin: 10px auto; /* Center the table */
-            width: 500px; /* Fixed width for consistency */
-            border-collapse: collapse; /* Remove spaces between cells */
-        }
-
-        .button-table td {
-            padding: 10px; /* Space between buttons */
+            background-color: #2980b9; /* Darker Blue */
         }
     </style>
 </head>
 <body>
-    <h1>Create New Sale</h1>
+    <x-app-layout>
+        <div class="flex h-screen font-sans">
+            <!-- Collapsible Sidebar -->
+            <div x-data="{ open: true }" :class="open ? 'w-64' : 'w-20'" class="flex flex-col h-full" style="background-color: #15151D; color: #ffffff;">
+                <div class="flex items-center justify-between p-4 border-b border-blue-700">
+                    <div class="flex justify-center w-full">
+                        <img x-show="open" src="{{ asset('img/gg.png') }}" alt="My Dashboard" class="h-14 w-50 object-contain mx-auto" />
+                    </div>
+                    <button @click="open = !open" class="text-gray-400 hover:text-white focus:outline-none">
+                        <span class="material-icons text-2xl">menu</span>
+                    </button>
+                </div>
 
-    @if(session('error'))
-        <div class="error">{{ session('error') }}</div>
-    @endif
+                <nav class="flex-1 mt-4 space-y-2 px-2">
+                    <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">dashboard</span>
+                        <span x-show="open" class="flex-1 text-base">Dashboard</span>
+                    </a>
+                    <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">inventory</span>
+                        <span x-show="open" class="flex-1 text-base">Products</span>
+                    </a>
+                    <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">show_chart</span>
+                        <span x-show="open" class="flex-1 text-base">Sales</span>
+                    </a>
+                    <a href="/report" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">assessment</span>
+                        <span x-show="open" class="flex-1 text-base">Report</span>
+                    </a>
+                </nav>
+            </div>
 
-    <form id="sales-form" action="{{ route('sales.store') }}" method="POST">
-        @csrf
+            <div class="flex-1 flex flex-col">
+                <header class="shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
+                    <div class="flex items-center space-x-4">
+                        <div x-data="{ open: false }" class="relative">
+                            <div @click="open = !open" class="flex items-center cursor-pointer text-gray-800">
+                                <div>{{ Auth::user()->name }}</div>
+                                <div class="ml-1">
+                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                    </svg>
+                                </div>
+                            </div>
 
-        <label for="product">Product:</label>
-        <select name="product_id" id="product" required>
-            @foreach ($products as $product)
-                <option value="{{ $product->id }}" data-stock="{{ $product->quantity }}">
-                    {{ $product->name }} - ₱{{ number_format($product->price, 2) }} (Stock: {{ $product->quantity }})
-                </option>
-            @endforeach
-        </select>
+                            <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-transparent">
+                                <div class="py-1">
+                                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
+                                        {{ __('Profile') }}
+                                    </a>
 
-        <label for="quantity">Quantity:</label>
-        <input type="number" name="quantity" id="quantity" min="1" required placeholder="Enter quantity sold">
-    </form>
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <a href="{{ route('logout') }}"
+                                            onclick="event.preventDefault(); this.closest('form').submit();"
+                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
+                                            {{ __('Log Out') }}
+                                        </a>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </header>
 
-    <!-- Button table for organizing buttons -->
-    <table class="button-table">
-        <tr>
-            <td>
-                <button type="submit" form="sales-form">Process Sale</button>
-            </td>
-        </tr>
-        <tr>
-            <td>
-                <a href="{{ route('products.index') }}" class="back-link">Back to Products</a>
-            </td>
-        </tr>
-    </table>
+                <main class="flex-1 p-6 bg-white">
+                    <div class="max-w-8xl mx-auto">
+                        <div class="bg-white overflow-hidden shadow-md rounded-lg p-6">
+                            <h1 class="text-2xl font-bold mb-4">Create New Sale</h1>
 
-    <script>
-        // Update quantity input's max attribute based on selected product's stock
-        document.getElementById('product').addEventListener('change', function() {
-            var selectedProduct = this.options[this.selectedIndex];
-            var availableStock = parseInt(selectedProduct.getAttribute('data-stock')); // Get stock from data attribute
-            document.getElementById('quantity').setAttribute('max', availableStock); // Set the max value for quantity input
-        });
+                            <!-- Success and Error Messages -->
+                            @if(session('success'))
+                                <div class="success">{{ session('success') }}</div>
+                            @endif
 
-        // Trigger the change event on page load to set the initial max value
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('product').dispatchEvent(new Event('change'));
-        });
-    </script>
+                            @if(session('error'))
+                                <div class="error">{{ session('error') }}</div>
+                            @endif
+
+                            <form action="{{ route('sales.store') }}" method="POST">
+                                @csrf
+
+                                <label for="product_id">Product:</label>
+                                <select name="product_id" id="product_id" required>
+                                    @foreach($products as $product)
+                                        <option value="{{ $product->id }}">
+                                            {{ $product->name }} - ₱{{ number_format($product->price, 2) }} (Stock: {{ $product->quantity }})
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <label for="quantity">Quantity Sold:</label>
+                                <input type="number" name="quantity" id="quantity" required>
+
+                                <div class="mt-4">
+                                    <button type="submit" class="create-button">Create Sale</button>
+                                    <a href="{{ route('sales.index') }}" class="back-link">Back to Sales</a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </x-app-layout>
 </body>
 </html>

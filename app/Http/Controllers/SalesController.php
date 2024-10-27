@@ -13,6 +13,7 @@ class SalesController extends Controller
     {
         $products = Product::all(); // Get all products
         return view('sales.create', compact('products')); // Pass products to the view
+
     }
 
     // Process the sale and update inventory
