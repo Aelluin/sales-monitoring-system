@@ -64,39 +64,70 @@ class SalesController extends Controller
 
     // Generate report for monthly sales and other metrics
     public function report()
-{
-    // Get monthly sales data
-    $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
+    {
+        // Get monthly sales data
+        $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-    // Prepare data for the graph
-    $monthlyData = [];
-    foreach ($monthlySales as $sale) {
-        $monthlyData[$sale->month] = $sale->total_sales;
-    }
-
-    // Fill in missing months with zero sales
-    for ($month = 1; $month <= 12; $month++) {
-        if (!isset($monthlyData[$month])) {
-            $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+        // Prepare data for the graph
+        $monthlyData = [];
+        foreach ($monthlySales as $sale) {
+            $monthlyData[$sale->month] = $sale->total_sales;
         }
+
+        // Fill in missing months with zero sales
+        for ($month = 1; $month <= 12; $month++) {
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+            }
+        }
+
+        // Calculate total revenue
+        $totalRevenue = Sale::sum('total_price');
+
+        // Get best-selling products
+        $bestSellingProducts = Sale::selectRaw('product_id, SUM(quantity) as total_quantity')
+            ->groupBy('product_id')
+            ->orderByDesc('total_quantity')
+            ->with('product')
+            ->take(5)
+            ->get();
+
+        // Pass the monthly data for the chart and other report data to the view
+        return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts'));
     }
 
-    // Calculate total revenue
-    $totalRevenue = Sale::sum('total_price');
+    // Dashboard Metrics
+    public function dashboard()
+    {
+        // Fetch monthly sales data
+        $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
 
-    // Get best-selling products
-    $bestSellingProducts = Sale::selectRaw('product_id, SUM(quantity) as total_quantity')
-        ->groupBy('product_id')
-        ->orderByDesc('total_quantity')
-        ->with('product')
-        ->take(5)
-        ->get();
+        // Prepare monthly data
+        $monthlyData = [];
+        foreach ($monthlySales as $sale) {
+            $monthlyData[$sale->month] = $sale->total_sales;
+        }
+        for ($month = 1; $month <= 12; $month++) {
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+            }
+        }
 
-    // Pass the monthly data for the chart and other report data to the view
-    return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts'));
-}
+        // Calculate total revenue and other metrics
+        $totalRevenue = Sale::sum('total_price');
+        $totalSalesCount = Sale::count(); // Total number of sales
+        $averageOrderValue = $totalSalesCount > 0 ? $totalRevenue / $totalSalesCount : 0;
 
+        // Calculate total sales (the sum of all total prices)
+        $totalSales = Sale::sum('total_price'); // Add this line
+
+        // Pass data to the view, including total sales count
+        return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales')); // Add totalSales here
+    }
 }

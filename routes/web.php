@@ -72,6 +72,7 @@ Route::middleware('auth')->group(function () {
         return view('dashboard', compact('monthlyData')); // Return the dashboard view with monthly sales data
     })->name('dashboard');
 
+    Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
 });
 
 // Include authentication routes
