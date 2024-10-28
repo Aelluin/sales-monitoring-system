@@ -79,6 +79,15 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="bg-white overflow-hidden shadow-md rounded-lg p-6 text-gray-900">
                                 <h2 class="text-xl font-bold mb-4 text-center">Monthly Sales Overview</h2>
+                                <!-- Year Selector -->
+                                <div class="mb-4">
+                                    <label for="yearSelector" class="block text-gray-700">Select Year:</label>
+                                    <select id="yearSelector" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                                        @foreach($years as $year)
+                                            <option value="{{ $year }}">{{ $year }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                                 <canvas id="monthlySalesChart"></canvas>
                             </div>
                             <div class="bg-white overflow-hidden shadow-md rounded-lg p-6 text-gray-900">
@@ -104,8 +113,27 @@
             // Pass the monthly data to JavaScript from the PHP variable
             const monthlyData = @json($monthlyData); // Ensure this variable is passed correctly from your route
 
-            // Debugging: Check the content of monthlyData
-            console.log(monthlyData); // This will help you see the data structure
+            // Function to update the chart based on the selected year
+            function updateChart(selectedYear) {
+                const salesData = monthlyData[selectedYear] || {};
+                const chartData = [
+                    salesData[1] || 0,
+                    salesData[2] || 0,
+                    salesData[3] || 0,
+                    salesData[4] || 0,
+                    salesData[5] || 0,
+                    salesData[6] || 0,
+                    salesData[7] || 0,
+                    salesData[8] || 0,
+                    salesData[9] || 0,
+                    salesData[10] || 0,
+                    salesData[11] || 0,
+                    salesData[12] || 0
+                ];
+
+                monthlySalesChart.data.datasets[0].data = chartData;
+                monthlySalesChart.update();
+            }
 
             const ctx = document.getElementById('monthlySalesChart').getContext('2d');
             const monthlySalesChart = new Chart(ctx, {
@@ -115,18 +143,18 @@
                     datasets: [{
                         label: 'Sales per Month',
                         data: [
-                            monthlyData[1] || 0,
-                            monthlyData[2] || 0,
-                            monthlyData[3] || 0,
-                            monthlyData[4] || 0,
-                            monthlyData[5] || 0,
-                            monthlyData[6] || 0,
-                            monthlyData[7] || 0,
-                            monthlyData[8] || 0,
-                            monthlyData[9] || 0,
-                            monthlyData[10] || 0,
-                            monthlyData[11] || 0,
-                            monthlyData[12] || 0
+                            monthlyData[2024][1] || 0,
+                            monthlyData[2024][2] || 0,
+                            monthlyData[2024][3] || 0,
+                            monthlyData[2024][4] || 0,
+                            monthlyData[2024][5] || 0,
+                            monthlyData[2024][6] || 0,
+                            monthlyData[2024][7] || 0,
+                            monthlyData[2024][8] || 0,
+                            monthlyData[2024][9] || 0,
+                            monthlyData[2024][10] || 0,
+                            monthlyData[2024][11] || 0,
+                            monthlyData[2024][12] || 0
                         ],
                         borderColor: 'rgba(75, 192, 192, 1)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -169,6 +197,11 @@
                         }
                     }
                 }
+            });
+
+            // Example: Call updateChart when a year is selected
+            document.getElementById('yearSelector').addEventListener('change', function() {
+                updateChart(this.value); // Call the update function with the selected year
             });
         </script>
 

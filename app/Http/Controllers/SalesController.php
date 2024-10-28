@@ -102,32 +102,36 @@ class SalesController extends Controller
     // Dashboard Metrics
     public function dashboard()
     {
-        // Fetch monthly sales data
-        $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
-            ->groupBy('month')
+        // Fetch monthly sales data for all years
+        $monthlySales = Sale::selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_price) as total_sales')
+            ->groupBy('year', 'month')
+            ->orderBy('year')
             ->orderBy('month')
             ->get();
 
-        // Prepare monthly data
+        // Prepare monthly data for each year
         $monthlyData = [];
         foreach ($monthlySales as $sale) {
-            $monthlyData[$sale->month] = $sale->total_sales;
+            $monthlyData[$sale->year][$sale->month] = $sale->total_sales;
         }
-        for ($month = 1; $month <= 12; $month++) {
-            if (!isset($monthlyData[$month])) {
-                $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+
+        // Fill in missing months for each year with zero sales
+        $years = Sale::selectRaw('YEAR(created_at) as year')->distinct()->orderBy('year')->pluck('year')->toArray();
+        foreach ($years as $year) {
+            for ($month = 1; $month <= 12; $month++) {
+                if (!isset($monthlyData[$year][$month])) {
+                    $monthlyData[$year][$month] = 0; // Default to 0 if no sales for that month
+                }
             }
         }
 
         // Calculate total revenue and other metrics
         $totalRevenue = Sale::sum('total_price');
         $totalSalesCount = Sale::count(); // Total number of sales
+        $totalSales = Sale::sum('total_price'); // Calculate total sales
         $averageOrderValue = $totalSalesCount > 0 ? $totalRevenue / $totalSalesCount : 0;
 
-        // Calculate total sales (the sum of all total prices)
-        $totalSales = Sale::sum('total_price'); // Add this line
-
-        // Pass data to the view, including total sales count
-        return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales')); // Add totalSales here
+        // Pass data to the view, including total sales count and years
+        return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales', 'years'));
     }
 }
