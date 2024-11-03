@@ -28,12 +28,12 @@ class SalesController extends Controller
         $product = Product::findOrFail($request->product_id);
         $quantity = $request->quantity;
 
-        // Check if the product has enough quantity in stock
+        // Check stock levels
         if ($quantity > $product->quantity) {
             return redirect()->back()->with('error', 'Not enough stock for this product.'); // Stock insufficient
         }
 
-        // Check if the stock is low and notify the user, but allow the sale
+        // Notify user if stock is low
         if ($product->quantity < $product->low_stock_threshold) {
             session()->flash('warning', 'Stock is low for this product!'); // Flash a warning message
         }
@@ -72,17 +72,7 @@ class SalesController extends Controller
             ->get();
 
         // Prepare data for the graph
-        $monthlyData = [];
-        foreach ($monthlySales as $sale) {
-            $monthlyData[$sale->month] = $sale->total_sales;
-        }
-
-        // Fill in missing months with zero sales
-        for ($month = 1; $month <= 12; $month++) {
-            if (!isset($monthlyData[$month])) {
-                $monthlyData[$month] = 0; // Default to 0 if no sales for that month
-            }
-        }
+        $monthlyData = $this->fillMissingMonths($monthlySales);
 
         // Calculate total revenue
         $totalRevenue = Sale::sum('total_price');
@@ -95,8 +85,30 @@ class SalesController extends Controller
             ->take(5)
             ->get();
 
+        // Prepare product names and quantities for the chart
+        $productNames = $bestSellingProducts->pluck('product.name')->toArray();
+        $salesQuantities = $bestSellingProducts->pluck('total_quantity')->toArray();
+
         // Pass the monthly data for the chart and other report data to the view
-        return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts'));
+        return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts', 'productNames', 'salesQuantities'));
+    }
+
+    // Fill in missing months with zero sales
+    private function fillMissingMonths($monthlySales)
+    {
+        $monthlyData = [];
+        foreach ($monthlySales as $sale) {
+            $monthlyData[$sale->month] = $sale->total_sales;
+        }
+
+        // Fill in missing months with zero sales
+        for ($month = 1; $month <= 12; $month++) {
+            if (!isset($monthlyData[$month])) {
+                $monthlyData[$month] = 0; // Default to 0 if no sales for that month
+            }
+        }
+
+        return $monthlyData;
     }
 
     // Dashboard Metrics
