@@ -52,7 +52,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        // You will implement this later
+
     }
 
     /**

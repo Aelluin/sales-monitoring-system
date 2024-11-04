@@ -8,7 +8,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Sales Management</title>
     <style>
-        /* General Styling for Success and Error Messages */
+        /*  Success and Error Messages */
         .success, .error {
             padding: 10px;
             margin-bottom: 20px;

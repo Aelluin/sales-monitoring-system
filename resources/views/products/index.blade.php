@@ -193,7 +193,7 @@
                 <div class="max-w-8xl mx-auto"> <!-- Updated max-width -->
                     <div class="bg-white overflow-hidden shadow-md rounded-lg">
                         <div class="p-6 text-gray-900">
-                            <!-- Main content goes here -->
+
                             <h1 class="text-2xl font-bold mb-4">All Products</h1>
 
                             <!-- Success and Error Messages -->

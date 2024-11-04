@@ -132,7 +132,7 @@ class SalesController extends Controller
         foreach ($years as $year) {
             for ($month = 1; $month <= 12; $month++) {
                 if (!isset($monthlyData[$year][$month])) {
-                    $monthlyData[$year][$month] = 0; // Default to 0 if no sales for that month
+                    $monthlyData[$year][$month] = 0;
                 }
             }
         }

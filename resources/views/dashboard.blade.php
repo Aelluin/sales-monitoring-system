@@ -112,7 +112,7 @@
 
         <script>
             // Pass the monthly data to JavaScript from the PHP variable
-const monthlyData = @json($monthlyData); // Ensure this variable is passed correctly from your route
+const monthlyData = @json($monthlyData);
 
 // Function to update the chart based on the selected year
 function updateChart(selectedYear) {
@@ -142,7 +142,7 @@ const monthlySalesChart = new Chart(ctx, {
     data: {
         labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
         datasets: [{
-            label: '', // Set the label to an empty string to avoid showing it in the legend
+            label: '',
             data: [
                 monthlyData[2024][1] || 0,
                 monthlyData[2024][2] || 0,
@@ -161,20 +161,20 @@ const monthlySalesChart = new Chart(ctx, {
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderWidth: 2,
             fill: true,
-            pointRadius: 5, // Increased size of point markers
-            pointHoverRadius: 7, // Hover effect for point markers
+            pointRadius: 5,
+            pointHoverRadius: 7,
         }]
     },
     options: {
         responsive: true,
         plugins: {
             legend: {
-                display: false // Set this to false to hide the legend completely
+                display: false
             },
             tooltip: {
                 callbacks: {
                     label: function(tooltipItem) {
-                        return '₱' + tooltipItem.raw.toLocaleString(); // Format tooltip with peso sign
+                        return '₱' + tooltipItem.raw.toLocaleString();
                     }
                 }
             }
@@ -188,8 +188,8 @@ const monthlySalesChart = new Chart(ctx, {
                 },
                 ticks: {
                     callback: function(value) {
-                        // Add commas to the y-axis labels
-                        return '₱' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Format value with commas
+
+                        return '₱' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // commas
                     }
                 }
             },
@@ -203,9 +203,9 @@ const monthlySalesChart = new Chart(ctx, {
     }
 });
 
-// Example: Call updateChart when a year is selected
+// Year selector
 document.getElementById('yearSelector').addEventListener('change', function() {
-    updateChart(this.value); // Call the update function with the selected year
+    updateChart(this.value);
 });
 
 
