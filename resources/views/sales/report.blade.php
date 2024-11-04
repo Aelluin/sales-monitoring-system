@@ -9,15 +9,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Sales Report</title>
     <style>
-        /* Custom styles for better contrast and aesthetics */
         .highlighted-section {
-            background-color: #e2f0f9; /* Light blue for better contrast */
-            border: 1px solid #a0d3e8; /* Slightly darker border */
+            background-color: #e2f0f9;
+            border: 1px solid #a0d3e8;
             border-radius: 0.5rem;
         }
         .product-card {
             background-color: white;
-            border: 1px solid #e2e8f0; /* Light gray border */
+            border: 1px solid #e2e8f0;
             border-radius: 0.5rem;
             padding: 1rem;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -28,10 +27,10 @@
         }
         .chart-container {
             position: relative;
-            height: 400px; /* Set a specific height for the chart */
-            max-width: 900px; /* Set a max width for the chart to make it wider */
-            width: 100%; /* Full width */
-            margin: 0 auto; /* Center the chart */
+            height: 400px;
+            max-width: 1200px; /* Increased max-width for more space */
+            width: 100%;
+            margin: 0 auto;
         }
         .chart-card {
             background-color: white;
@@ -39,19 +38,16 @@
             padding: 1.5rem;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             margin-top: 1rem;
-            max-width: 95%; /* Make the card a bit wider within the flex container */
-            margin-left: auto; /* Center card in the flex container */
-            margin-right: auto; /* Center card in the flex container */
+            max-width: 95%;
+            margin-left: auto;
+            margin-right: auto;
         }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
 
 <x-app-layout>
-    <!-- Full-Page Container -->
     <div x-data="{ sidebarOpen: true }" class="flex h-screen">
-
-        <!-- Collapsible Sidebar -->
         <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300" style="background-color: #15151D; color: #ffffff;">
             <div class="flex items-center justify-between p-4 border-b border-blue-700">
                 <div class="flex justify-center w-full">
@@ -61,7 +57,6 @@
                     <span class="material-icons text-2xl">menu</span>
                 </button>
             </div>
-
             <nav class="flex-1 mt-4 space-y-2 px-2">
                 <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
                     <span class="material-icons mr-4 text-xl">dashboard</span>
@@ -115,11 +110,9 @@
                 </div>
             </header>
 
-            <!-- Main Content -->
             <main class="flex-1 p-6 space-y-6">
                 <h2 class="text-center text-xl font-semibold">Total Revenue: ₱{{ number_format($totalRevenue, 2) }}</h2>
 
-                <!-- Highlighted section for best-selling products -->
                 <div class="highlighted-section p-4 mb-6">
                     <h3 class="text-lg text-center font-semibold text-gray-800">Best-Selling Products</h3>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -132,7 +125,6 @@
                     </div>
                 </div>
 
-                <!-- Chart Section -->
                 <div class="chart-card">
                     <h3 class="text-center text-lg font-semibold text-gray-800">Sales Chart</h3>
                     <div class="chart-container flex justify-center">
@@ -140,7 +132,6 @@
                     </div>
                 </div>
 
-                <!-- Button section -->
                 <div class="text-center">
                     <a class="inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200" href="{{ route('sales.index') }}">Back to Sales</a>
                 </div>
@@ -151,14 +142,13 @@
 
 <!-- Chart.js Script -->
 <script>
-    const labels = @json($productNames); // Fetch product names dynamically
+    const labels = @json($productNames);
     const data = {
         labels: labels,
         datasets: [{
-            label: 'Sales Quantity',
-            data: @json($salesQuantities), // Fetch sales quantities dynamically
-            backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue color
-            borderColor: 'rgba(54, 162, 235, 1)', // Matching border color
+            data: @json($salesQuantities),
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
             borderWidth: 1
         }]
     };
@@ -168,7 +158,12 @@
         data: data,
         options: {
             responsive: true,
-            maintainAspectRatio: false, // Allows flexibility in height
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
                 y: {
                     beginAtZero: true,
@@ -180,7 +175,7 @@
                         }
                     },
                     ticks: {
-                        color: '#333', // Darker ticks for better visibility
+                        color: '#333',
                         font: {
                             size: 14,
                         }
@@ -195,10 +190,13 @@
                         }
                     },
                     ticks: {
-                        color: '#333', // Darker ticks for better visibility
+                        color: '#333',
                         font: {
                             size: 14,
-                        }
+                        },
+                        autoSkip: false,
+                        maxRotation: 0,
+                        minRotation: 0
                     }
                 }
             }
@@ -210,6 +208,5 @@
         config
     );
 </script>
-
 </body>
 </html>
