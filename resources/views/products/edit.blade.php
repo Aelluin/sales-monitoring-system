@@ -183,7 +183,7 @@
 
                             <div class="mt-4">
                                 <button type="submit" class="update-button">Update Product</button>
-                                <a href="{{ route('products.index') }}" class="back-link">Back to Products</a>
+                                <a href="{{ route('products.index') }}" class="back-link">Back to Product List</a>
                             </div>
                         </form>
                     </div>

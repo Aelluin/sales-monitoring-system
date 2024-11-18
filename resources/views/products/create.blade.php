@@ -165,7 +165,7 @@
             <main class="flex-1 p-6 bg-white">
                 <div class="max-w-8xl mx-auto">
                     <div class="bg-white overflow-hidden shadow-md rounded-lg p-6">
-                        <h1 class="text-2xl font-bold mb-4">Create New Product</h1>
+                        <h1 class="text-2xl font-bold mb-4">Add Product</h1>
 
                         <!-- Success and Error Messages -->
                         @if(session('success'))
@@ -192,8 +192,8 @@
                             <textarea name="description" id="description" rows="4"></textarea>
 
                             <div class="mt-4">
-                                <button type="submit" class="create-button">Create Product</button>
-                                <a href="{{ route('products.index') }}" class="back-link">Back to Products</a>
+                                <button type="submit" class="create-button">Add Product</button>
+                                <a href="{{ route('products.index') }}" class="back-link">Back to Product List</a>
                             </div>
                         </form>
                     </div>

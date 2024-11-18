@@ -11,47 +11,53 @@ class SalesController extends Controller
     // Display the sales form
     public function create()
     {
-        $products = Product::all(); // Get all products
-        return view('sales.create', compact('products')); // Pass products to the view
+        // Paginate products for efficiency (can be adjusted based on your needs)
+        $products = Product::paginate(15);
+        return view('sales.create', compact('products'));
     }
 
     // Process the sale and update inventory
     public function store(Request $request)
     {
-        // Validate incoming request data
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
+        try {
+            // Validate incoming request data
+            $request->validate([
+                'product_id' => 'required|exists:products,id',
+                'quantity' => 'required|integer|min:1',
+            ]);
 
-        // Fetch the product with the specified product_id
-        $product = Product::findOrFail($request->product_id);
-        $quantity = $request->quantity;
+            // Fetch the product with the specified product_id
+            $product = Product::findOrFail($request->product_id);
+            $quantity = $request->quantity;
 
-        // Check stock levels
-        if ($quantity > $product->quantity) {
-            return redirect()->back()->with('error', 'Not enough stock for this product.'); // Stock insufficient
+            // Check stock levels
+            if ($quantity > $product->quantity) {
+                return redirect()->back()->with('error', 'Not enough stock for this product.');
+            }
+
+            // Notify user if stock is low
+            if ($product->quantity < $product->low_stock_threshold) {
+                session()->flash('warning', 'Stock is low for this product!');
+            }
+
+            // Calculate total price
+            $totalPrice = $product->price * $quantity;
+
+            // Create the sale record
+            Sale::create([
+                'product_id' => $product->id,
+                'quantity' => $quantity,
+                'total_price' => $totalPrice,
+            ]);
+
+            // Update the product quantity (subtract the sold quantity)
+            $product->decrement('quantity', $quantity);
+
+            return redirect()->route('sales.index')->with('success', 'Sale processed successfully!');
+        } catch (\Exception $e) {
+            // Handle any unexpected errors
+            return redirect()->back()->with('error', 'Something went wrong. Please try again.');
         }
-
-        // Notify user if stock is low
-        if ($product->quantity < $product->low_stock_threshold) {
-            session()->flash('warning', 'Stock is low for this product!'); // Flash a warning message
-        }
-
-        // Calculate total price
-        $totalPrice = $product->price * $quantity;
-
-        // Create the sale record
-        Sale::create([
-            'product_id' => $product->id,
-            'quantity' => $quantity,
-            'total_price' => $totalPrice,
-        ]);
-
-        // Update the product quantity (subtract the sold quantity)
-        $product->decrement('quantity', $quantity); // More efficient way to update quantity
-
-        return redirect()->route('sales.index')->with('success', 'Sale processed successfully!'); // Success message
     }
 
     // Show all sales (Optional, for reporting)
@@ -71,7 +77,7 @@ class SalesController extends Controller
             ->orderBy('month')
             ->get();
 
-        // Prepare data for the graph
+        // Prepare data for the graph (fill missing months with 0 sales)
         $monthlyData = $this->fillMissingMonths($monthlySales);
 
         // Calculate total revenue
@@ -84,6 +90,16 @@ class SalesController extends Controller
             ->with('product')
             ->take(5)
             ->get();
+
+        // Handle empty best-selling products scenario
+        if ($bestSellingProducts->isEmpty()) {
+            $bestSellingProducts = collect([ // fallback if no best-selling products are found
+                (object)[
+                    'product' => (object)['name' => 'No products sold'],
+                    'total_quantity' => 0,
+                ]
+            ]);
+        }
 
         // Prepare product names and quantities for the chart
         $productNames = $bestSellingProducts->pluck('product.name')->toArray();
@@ -145,5 +161,28 @@ class SalesController extends Controller
 
         // Pass data to the view, including total sales count and years
         return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales', 'years'));
+    }
+    public function dailyReport(Request $request)
+    {
+        // Get today's sales or filter by selected date
+        $selectedDate = $request->date ?: now()->toDateString(); // Default to today's date if no date is selected
+        $dailySales = Sale::whereDate('created_at', $selectedDate)->get();
+
+        // Calculate total revenue
+        $totalRevenue = $dailySales->sum('total_price');
+
+        // Group by product to get quantities sold
+        $salesData = $dailySales->groupBy('product_id')->map(function ($group) {
+            return [
+                'name' => $group->first()->product->name, // Adjust for product relationship
+                'quantity' => $group->sum('quantity'),
+            ];
+        });
+
+        $productNames = $salesData->pluck('name')->toArray();
+        $salesQuantities = $salesData->pluck('quantity')->toArray();
+
+        // Pass the necessary data to the view
+        return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate'));
     }
 }

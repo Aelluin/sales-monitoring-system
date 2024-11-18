@@ -3,76 +3,46 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
-use App\Models\Sale;
-
 use Illuminate\Support\Facades\Route;
+
 // Route for the home page
 Route::get('/', function () {
     return view('welcome');
 });
 
-// Route for the dashboard page, protected by authentication and verification
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Dashboard route, protected by authentication and verification
+Route::middleware(['auth', 'verified'])->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
 
-// Group routes that require authentication
-Route::middleware('auth')->group(function () {
     // Profile management routes
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit'); // Profile edit form
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update'); // Update the user's profile
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy'); // Delete the user's profile
-
-    // Sales management routes
-    Route::get('/sales/create', [SalesController::class, 'create'])->name('sales.create'); // Create a new sale
-    Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report'); // Show sales report
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
+    });
 
     // Resource routes for products (CRUD operations)
-    Route::resource('products', ProductController::class); // Automatically create routes for standard actions (index, create, store, show, edit, update, destroy)
+    Route::resource('products', ProductController::class);
 
-    // Additional routes for products
-    Route::get('products/create', [ProductController::class, 'create'])->name('products.create'); // Create a new product
-    Route::post('products', [ProductController::class, 'store'])->name('products.store'); // Store a new product in the database
+    // Sales management routes
+    Route::prefix('sales')->name('sales.')->group(function () {
+        // Route for creating a sale
+        Route::get('create', [SalesController::class, 'create'])->name('create');
 
-    // Resource routes for sales (CRUD operations)
-    Route::resource('sales', SalesController::class); // Automatically create routes for sales
+        // Report route for sales
+        Route::get('report', [SalesController::class, 'report'])->name('report');
 
-    // Additional routes for sales
-    Route::resource('sales', SalesController::class)->only(['create', 'store', 'index']); // Limit to create, store, and index actions
+        // Daily sales route
+        Route::get('daily', [SalesController::class, 'dailyReport'])->name('daily');  // Correct daily report route
 
-    // Route for sales report
-    Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report'); // Show the sales report
+        // Index route to display all sales
+        Route::get('/', [SalesController::class, 'index'])->name('index');
 
-    // Dashboard routes for products
-    Route::get('/dashboard/products/create', [ProductController::class, 'create'])->name('dashboard.products.create'); // Show product creation form
-    Route::get('/dashboard/products/{id}/edit', [ProductController::class, 'edit'])->name('dashboard.products.edit'); // Show product edit form (pass product ID)
-
-    // Dashboard routes for sales
-    Route::get('/dashboard/sales/create', [SalesController::class, 'create'])->name('dashboard.sales.create'); // Show sale creation form
-    Route::get('/dashboard/sales/{id}/edit', [SalesController::class, 'edit'])->name('dashboard.sales.edit'); // Show sale edit form (pass sale ID)
-
-    // Route for sales report
-    Route::get('/sales/report', [SalesController::class, 'report'])->name('sales.report'); // Show sales report
-
-    // Route for dashboard with sales data
-    Route::get('/dashboard', function () {
-        // Get monthly sales data from the database
-        $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
-            ->groupBy('month') // Group by month
-            ->orderBy('month') // Order by month
-            ->get(); // Execute the query and get results
-
-        // Prepare data for the graph
-        $monthlyData = [];
-        foreach ($monthlySales as $sale) {
-            $monthlyData[$sale->month] = $sale->total_sales; // Map month to total sales
-        }
-
-        return view('dashboard', compact('monthlyData')); // Return the dashboard view with monthly sales data
-    })->name('dashboard');
-
-    Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
+        // Store route for creating a new sale
+        Route::post('/', [SalesController::class, 'store'])->name('store');
+    });
 });
 
 // Include authentication routes
-require __DIR__.'/auth.php'; // Load authentication routes from the auth.php file
+require __DIR__ . '/auth.php';

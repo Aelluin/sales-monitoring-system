@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Sales Report</title>
+    <title>Daily Sales Report</title>
     <style>
         .highlighted-section {
             background-color: #e2f0f9;
@@ -32,9 +32,9 @@
         .chart-container {
             position: relative;
             height: 400px;
-            max-width: 1200px;
+            max-width: 1000px; /* Set a maximum width to make the chart look more centered */
             width: 100%;
-            margin: 0 auto;
+            margin: 0 auto; /* Center the chart */
         }
 
         .chart-card {
@@ -54,6 +54,7 @@
 
     <x-app-layout>
         <div x-data="{ sidebarOpen: true }" class="flex h-screen">
+            <!-- Sidebar -->
             <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
                 style="background-color: #15151D; color: #ffffff;">
                 <div class="flex items-center justify-between p-4 border-b border-blue-700">
@@ -65,6 +66,7 @@
                         <span class="material-icons text-2xl">menu</span>
                     </button>
                 </div>
+
                 <nav class="flex-1 mt-4 space-y-2 px-2">
                     <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
                         <span class="material-icons mr-4 text-xl">dashboard</span>
@@ -78,18 +80,17 @@
                         <span class="material-icons mr-4 text-xl">show_chart</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
                     </a>
-                    <div x-data="{ dropdownOpen: false }" class="relative">
-                        <!-- Report Button -->
-                        <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
+
+                    <!-- Collapsible Report Menu (No highlight on "Report" button anymore) -->
+                    <div x-data="{ dropdownOpen: true }" class="relative">
+                        <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
                             <span class="material-icons mr-4 text-xl">assessment</span>
                             <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
                             <span class="material-icons ml-auto">arrow_drop_down</span>
                         </a>
-
-                        <!-- Dropdown content -->
                         <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
-                            <!-- Daily Sales Link with Calendar Icon, smaller text and aligned properly -->
-                            <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
+                            <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200
+                                {{ request()->is('sales/daily') ? 'bg-blue-600 text-white' : '' }}">
                                 <span class="material-icons mr-2">event</span>
                                 Daily Sales
                             </a>
@@ -98,6 +99,7 @@
                 </nav>
             </div>
 
+            <!-- Main Content -->
             <div class="flex-1 flex flex-col">
                 <header class="shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
                     <div class="flex items-center space-x-4">
@@ -110,7 +112,6 @@
                                     </svg>
                                 </div>
                             </div>
-
                             <div x-show="dropdownOpen" @click.outside="dropdownOpen = false" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white">
                                 <div class="py-1">
                                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
@@ -132,103 +133,90 @@
                 </header>
 
                 <main class="flex-1 p-6 space-y-6">
-                    <h2 class="text-center text-xl font-semibold">Total Revenue: ₱{{ number_format($totalRevenue, 2) }}</h2>
+                    <h2 class="text-center text-xl font-semibold">Daily Sales Report</h2>
 
+                    <!-- Date Filter -->
+                    <form method="GET" action="{{ route('sales.daily') }}" class="flex justify-center space-x-4 mt-4">
+                        <label for="date" class="font-medium">Select Date:</label>
+                        <input type="date" name="date" id="date" value="{{ $selectedDate }}" class="border rounded px-2 py-1">
+                        <button type="submit" class="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                            Filter
+                        </button>
+                    </form>
+
+                    <!-- Total Revenue -->
+                    <div class="highlighted-section p-4 mb-6">
+                        <h3 class="text-lg text-center font-semibold text-gray-800">Total Revenue: ₱{{ number_format($totalRevenue, 2) }}</h3>
+                    </div>
+
+                    <!-- Best-Selling Products -->
                     <div class="highlighted-section p-4 mb-6">
                         <h3 class="text-lg text-center font-semibold text-gray-800">Best-Selling Products</h3>
                         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                            @foreach($bestSellingProducts as $product)
+                            @foreach($salesData as $sale)
                                 <div class="product-card">
-                                    <p class="text-center font-bold text-lg">{{ $product->product->name }}</p>
-                                    <p class="text-center text-gray-600">Quantity Sold: <strong>{{ $product->total_quantity }}</strong></p>
+                                    <p class="text-center font-bold">{{ $sale['name'] }}</p>
+                                    <p class="text-center">Quantity Sold: {{ $sale['quantity'] }}</p>
                                 </div>
                             @endforeach
                         </div>
                     </div>
 
+                    <!-- Sales Chart -->
                     <div class="chart-card">
-                        <h3 class="text-center text-lg font-semibold text-gray-800">Sales Chart</h3>
-                        <div class="chart-container flex justify-center">
+                        <div class="chart-container">
                             <canvas id="salesChart"></canvas>
                         </div>
-                    </div>
-
-                    <div class="text-center">
-                        <a class="inline-block px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-200" href="{{ route('sales.index') }}">Back to Sales</a>
                     </div>
                 </main>
             </div>
         </div>
-    </x-app-layout>
 
-    <!-- Chart.js Script -->
-    <script>
-        const labels = @json($productNames);
-        const data = {
-            labels: labels,
-            datasets: [{
-                data: @json($salesQuantities),
-                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 1
-            }]
-        };
+        <script>
+            const labels = @json($productNames);
+            const data = {
+                labels: labels,
+                datasets: [{
+                    label: 'Quantity Sold',
+                    data: @json($salesQuantities),
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            };
 
-        const config = {
-            type: 'bar',
-            data: data,
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Quantity Sold',
-                            font: {
-                                size: 16,
-                            }
-                        },
-                        ticks: {
-                            color: '#333',
-                            font: {
-                                size: 14,
-                            }
+            const config = {
+                type: 'bar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,  // Removed the legend
                         }
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Products',
-                            font: {
-                                size: 16,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Quantity Sold'
                             }
                         },
-                        ticks: {
-                            color: '#333',
-                            font: {
-                                size: 14,
-                            },
-                            autoSkip: false,
-                            maxRotation: 0,
-                            minRotation: 0
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Products'
+                            }
                         }
                     }
                 }
-            }
-        };
+            };
 
-        const salesChart = new Chart(
-            document.getElementById('salesChart'),
-            config
-        );
-    </script>
+            new Chart(document.getElementById('salesChart'), config);
+        </script>
+    </x-app-layout>
 </body>
 
 </html>

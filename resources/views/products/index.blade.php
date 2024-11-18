@@ -84,7 +84,7 @@
         .create-product {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #27ae60; /* Green */
+            background-color: #27ae60;
             color: white;
             text-align: center;
             border-radius: 4px;
@@ -93,17 +93,17 @@
         }
 
         .create-product:hover {
-            background-color: #219150; /* Darker Green */
+            background-color: #219150;
         }
 
         /* General Styles */
         body {
-            background-color: #ffffff; /* White background */
-            color: #333333; /* Dark text color for readability */
+            background-color: #ffffff;
+            color: #333333;
         }
 
         header {
-            background-color: #f8f8f8; /* Light header */
+            background-color: #f8f8f8;
             color: #333333; /* Dark text color */
         }
     </style>
@@ -245,7 +245,7 @@
                             </table>
 
                             <div class="mt-4">
-                                <a href="{{ route('products.create') }}" class="create-product">Create New Product</a>
+                                <a href="{{ route('products.create') }}" class="create-product">Add Product</a>
                             </div>
                         </div>
                     </div>
