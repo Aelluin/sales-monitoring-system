@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class SalesController extends Controller
 {
@@ -185,4 +186,101 @@ class SalesController extends Controller
         // Pass the necessary data to the view
         return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate'));
     }
+    public function showWeeklySales(Request $request)
+{
+    // Get the year, month, and week from the request or use defaults
+    $year = (int) $request->get('year', now()->year);
+    $month = (int) $request->get('month', now()->month);
+    $week = (int) $request->get('week', now()->weekOfYear);
+
+    // Ensure the selected week is within the selected month
+    $startOfMonth = Carbon::create($year, $month, 1);
+    $endOfMonth = $startOfMonth->copy()->endOfMonth();
+
+    // If the requested week is out of bounds, set it to the first week of the month
+    if ($week < 1 || $week > $startOfMonth->copy()->endOfMonth()->weekOfYear) {
+        $week = $startOfMonth->weekOfYear; // Default to the first week of the month
+    }
+
+    // Fetch the start and end date of the selected week within the given month
+    $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
+    $endOfWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
+
+    // Ensure that the start and end of the week are within the selected month
+    if ($startOfWeek->month !== $month) {
+        // Instead of redirecting back, set a default valid week (first week of the month)
+        $startOfWeek = $startOfMonth->copy()->startOfWeek();
+        $endOfWeek = $startOfMonth->copy()->endOfWeek();
+
+        // Optionally, add a message indicating the issue
+        return redirect()->route('sales.showWeeklySales', [
+            'year' => $year,
+            'month' => $month,
+            'week' => $startOfMonth->weekOfYear,
+        ])->with('error', 'The selected week is not in the chosen month. Showing the first week of the month.');
+    }
+
+    try {
+        // Fetch sales data for the selected week
+        $salesData = Sale::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                         ->with('product')
+                         ->get();
+    } catch (\Exception $e) {
+        Log::error("Weekly Sales Error [Year: $year, Month: $month, Week: $week]: " . $e->getMessage());
+        return redirect()->back()->with('error', 'Unable to fetch weekly sales data.');
+    }
+
+    // Ensure there's sales data
+    if ($salesData->isEmpty()) {
+        return redirect()->back()->with('error', 'No sales data found for the selected week.');
+    }
+
+    // Total revenue for the selected week
+    $totalRevenue = $salesData->sum(fn($sale) => (float) $sale->total_price);
+
+    // Aggregate sales by product
+    $weeklyProductSales = $this->aggregateProductSales($salesData);
+
+    // Labels for chart (the days of the week)
+    $weeklyLabels = [];
+    $weeklySales = [];
+
+    // Populate the chart data
+    foreach (range(0, 6) as $dayOffset) {
+        $currentDay = $startOfWeek->copy()->addDays($dayOffset);
+        $weeklyLabels[] = $currentDay->format('l'); // Day name
+        $weeklySales[] = $salesData->filter(function ($sale) use ($currentDay) {
+            return $sale->created_at->isSameDay($currentDay);
+        })->sum(fn($sale) => (float) $sale->total_price);
+    }
+
+    // Pass the data to the view
+    return view('sales.weekly', compact(
+        'weeklyProductSales',
+        'weeklyLabels',
+        'weeklySales',
+        'totalRevenue',
+        'week',
+        'year',
+        'month'
+    ));
 }
+
+
+   private function aggregateProductSales($salesData)
+   {
+       // Aggregate sales by product
+       $productSales = [];
+       foreach ($salesData as $sale) {
+           $productName = $sale->product->name;
+           if (!isset($productSales[$productName])) {
+               $productSales[$productName] = ['quantity_sold' => 0, 'total_revenue' => 0];
+           }
+           $productSales[$productName]['quantity_sold'] += $sale->quantity;
+           $productSales[$productName]['total_revenue'] += (float) $sale->total_price;
+       }
+       return $productSales;
+   }
+
+}
+

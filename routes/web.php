@@ -36,11 +36,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Daily sales route
         Route::get('daily', [SalesController::class, 'dailyReport'])->name('daily');  // Correct daily report route
 
+        // Corrected weekly sales route to match method name
+        Route::get('weekly', [SalesController::class, 'showWeeklySales'])->name('weekly');  // Fixed to match the controller method name
+
         // Index route to display all sales
         Route::get('/', [SalesController::class, 'index'])->name('index');
 
         // Store route for creating a new sale
         Route::post('/', [SalesController::class, 'store'])->name('store');
+
+
+
+Route::get('sales/weekly', [SalesController::class, 'showWeeklySales'])->name('sales.showWeeklySales');
+
     });
 });
 

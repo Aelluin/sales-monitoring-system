@@ -205,8 +205,17 @@
                                 <div class="error">{{ session('error') }}</div>
                             @endif
 
-                            <!-- Products Table -->
-                            <table class="w-full border-collapse bg-white shadow-md">
+                            <!-- Sorting Dropdown -->
+                            <div class="mb-4 flex justify-between items-center">
+                                <label for="sort" class="text-sm text-gray-700">Sort by stock status:</label>
+                                <select id="sort" class="p-2 border rounded" onchange="sortProducts(event)">
+                                    <option value="in_stock_first" selected>In Stock First</option> <!-- Default option -->
+                                    <option value="low_stock_first">Low Stock First</option>
+                                </select>
+                            </div>
+
+                            <!-- Product Table -->
+                            <table>
                                 <thead>
                                     <tr>
                                         <th class="p-2 border-b">Name</th>
@@ -218,25 +227,24 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($products as $product)
+                                    <!-- Assuming `products` is an array of product objects with 'quantity', 'low_stock_threshold', 'name', 'price', 'description' fields -->
+                                    @foreach($products as $product)
                                         <tr>
                                             <td class="p-2 border-b">{{ $product->name }}</td>
                                             <td class="p-2 border-b">₱{{ number_format($product->price, 2) }}</td>
                                             <td class="p-2 border-b">{{ $product->quantity }}</td>
                                             <td class="p-2 border-b">{{ $product->description }}</td>
                                             <td class="p-2 border-b">
-                                                @if($product->quantity <= $product->low_stock_threshold)
-                                                    <span class="text-red-400">Low Stock</span>
-                                                @else
-                                                    <span class="text-green-400">In Stock</span>
-                                                @endif
+                                                <span class="{{ $product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400' }}">
+                                                    {{ $product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock' }}
+                                                </span>
                                             </td>
                                             <td class="p-2 border-b action-buttons">
                                                 <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
                                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" onclick="return confirm('Are you sure you want to delete this product?')" class="delete-button">Delete</button>
+                                                    <button type="submit" class="delete-button">Delete</button>
                                                 </form>
                                             </td>
                                         </tr>
@@ -244,9 +252,11 @@
                                 </tbody>
                             </table>
 
+                            <!-- Add Product Button -->
                             <div class="mt-4">
                                 <a href="{{ route('products.create') }}" class="create-product">Add Product</a>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -256,3 +266,33 @@
 </x-app-layout>
 </body>
 </html>
+
+<script>
+    // Simple sorting function
+    function sortProducts(event) {
+        const sortOption = event ? event.target.value : 'in_stock_first';  // Get the selected sort option, default to 'in_stock_first'
+        const productsTable = document.querySelector('table tbody'); // Get the table body
+        const rows = Array.from(productsTable.rows); // Convert table rows to array
+
+        rows.sort((a, b) => {
+            const qtyA = parseInt(a.cells[2].textContent.trim());  // Quantity of product A
+            const qtyB = parseInt(b.cells[2].textContent.trim());  // Quantity of product B
+
+            // Sorting Logic: In Stock First (higher quantity first)
+            if (sortOption === 'in_stock_first') {
+                return qtyB - qtyA;  // Higher quantity should come first
+            } else {  // Low Stock First (lower quantity first)
+                return qtyA - qtyB;  // Lower quantity should come first
+            }
+        });
+
+        // Reorder the table rows based on the sorted data
+        rows.forEach(row => productsTable.appendChild(row));
+    }
+
+    // Call the sort function when the page loads to apply the default sorting
+    window.onload = function() {
+        sortProducts();  // Trigger the sorting with default option 'in_stock_first'
+    }
+</script>
+
