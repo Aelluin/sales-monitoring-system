@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\PDF;
 
 class SalesController extends Controller
 {
@@ -281,6 +282,40 @@ class SalesController extends Controller
        }
        return $productSales;
    }
+
+
+
+   public function generatePDF()
+{
+    // Retrieve sales data with associated product information
+    $sales = Sale::with('product')->get();
+
+    // Load the PDF view with the data
+    $pdf = PDF::loadView('sales.pdf', compact('sales'))
+              ->setOption('isHtml5ParserEnabled', true)
+              ->setOption('isPhpEnabled', true);
+
+    // Download the generated PDF
+    return $pdf->download('sales_report.pdf');
+}
+
+public function previewPDF()
+{
+    // Retrieve sales data with associated product information
+    $sales = Sale::with('product')->get();
+
+    // Generate the PDF content without immediate download
+    $pdf = PDF::loadView('sales.pdf', compact('sales'))
+              ->setOption('isHtml5ParserEnabled', true)
+              ->setOption('isPhpEnabled', true);
+
+    // Output the PDF and encode it as base64 for embedding
+    $pdfOutput = $pdf->output();
+    $pdfBase64 = base64_encode($pdfOutput);
+
+    // Return the preview view with the PDF data
+    return view('sales.preview', compact('pdfBase64'));
+}
 
 }
 

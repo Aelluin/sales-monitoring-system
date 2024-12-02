@@ -88,6 +88,7 @@
             justify-content: center;
             align-items: center;
             margin-top: 20px;
+            flex-direction: column; /* Added for stacked layout */
         }
 
         .pagination .page-link {
@@ -267,28 +268,44 @@
 
                             <div class="mt-4">
                                 <a href="{{ route('sales.create') }}" class="button create-button">Create New Sale</a>
+                                <!-- Download PDF Button -->
+                                <a href="{{ route('sales.preview') }}" class="button create-button bg-blue-500 hover:bg-blue-600">
+                                    Download PDF
+                                </a>
                             </div>
 
-                            <!-- Bullet Pagination with Arrows -->
+                            <!-- Bullet Pagination with Page Numbering -->
                             <div class="pagination">
-                                <div class="arrow {{ $sales->onFirstPage() ? 'disabled' : '' }}">
-                                    <a href="{{ $sales->previousPageUrl() }}" class="page-link">
-                                        <span class="material-icons">arrow_back</span>
-                                    </a>
+                                <!-- Page Numbering -->
+                                <div class="mb-2">
+                                    @for ($i = 1; $i <= $sales->lastPage(); $i++)
+                                        <a href="{{ $sales->url($i) }}" class="page-link {{ $i == $sales->currentPage() ? 'active' : '' }}">
+                                            {{ $i }}
+                                        </a>
+                                    @endfor
                                 </div>
 
-                                @foreach ($sales->getUrlRange(1, $sales->lastPage()) as $page => $url)
-                                    @if ($page == $sales->currentPage())
-                                        <span class="bullet active"></span>
-                                    @else
-                                        <a href="{{ $url }}" class="bullet"></a>
-                                    @endif
-                                @endforeach
+                                <!-- Arrows and Bullets -->
+                                <div class="flex items-center">
+                                    <div class="arrow {{ $sales->onFirstPage() ? 'disabled' : '' }}">
+                                        <a href="{{ $sales->previousPageUrl() }}" class="page-link">
+                                            <span class="material-icons">arrow_back</span>
+                                        </a>
+                                    </div>
 
-                                <div class="arrow {{ $sales->hasMorePages() ? '' : 'disabled' }}">
-                                    <a href="{{ $sales->nextPageUrl() }}" class="page-link">
-                                        <span class="material-icons">arrow_forward</span>
-                                    </a>
+                                    @foreach ($sales->getUrlRange(1, $sales->lastPage()) as $page => $url)
+                                        @if ($page == $sales->currentPage())
+                                            <span class="bullet active"></span>
+                                        @else
+                                            <a href="{{ $url }}" class="bullet"></a>
+                                        @endif
+                                    @endforeach
+
+                                    <div class="arrow {{ $sales->hasMorePages() ? '' : 'disabled' }}">
+                                        <a href="{{ $sales->nextPageUrl() }}" class="page-link">
+                                            <span class="material-icons">arrow_forward</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -300,6 +317,3 @@
 </x-app-layout>
 </body>
 </html>
-
-
-

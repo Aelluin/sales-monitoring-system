@@ -50,6 +50,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('sales/weekly', [SalesController::class, 'showWeeklySales'])->name('sales.showWeeklySales');
 
     });
+
+
+
+    Route::get('/sales/pdf', [SalesController::class, 'generatePDF'])->name('sales.pdf');
+
+    Route::get('/sales/preview', [SalesController::class, 'previewPDF'])->name('sales.preview');
+
+    Route::get('/sales/download', [SalesController::class, 'generatePDF'])->name('sales.pdf.download');
+
 });
 
 // Include authentication routes
