@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\UserLogController;
 
 // Route for the home page
 Route::get('/', function () {
@@ -12,7 +13,7 @@ Route::get('/', function () {
 
 // Dashboard route, protected by authentication and verification
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Dashboard
+    // Dashboard route
     Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
 
     // Profile management routes
@@ -34,31 +35,31 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('report', [SalesController::class, 'report'])->name('report');
 
         // Daily sales route
-        Route::get('daily', [SalesController::class, 'dailyReport'])->name('daily');  // Correct daily report route
+        Route::get('daily', [SalesController::class, 'dailyReport'])->name('daily');
 
-        // Corrected weekly sales route to match method name
-        Route::get('weekly', [SalesController::class, 'showWeeklySales'])->name('weekly');  // Fixed to match the controller method name
+        // Weekly sales route with parameters for year, month, and week
+        Route::get('weekly/{year}/{month}/{week}', [SalesController::class, 'showWeeklySales'])
+            ->name('showWeeklySales');
+
+        // Monthly sales route
+        Route::get('monthly', [SalesController::class, 'showMonthlySales'])->name('monthly');
 
         // Index route to display all sales
         Route::get('/', [SalesController::class, 'index'])->name('index');
 
         // Store route for creating a new sale
         Route::post('/', [SalesController::class, 'store'])->name('store');
-
-
-
-Route::get('sales/weekly', [SalesController::class, 'showWeeklySales'])->name('sales.showWeeklySales');
-
     });
 
+    // Sales PDF routes
+    Route::prefix('sales')->name('sales.')->group(function () {
+        Route::get('/pdf', [SalesController::class, 'generatePDF'])->name('pdf');
+        Route::get('/preview', [SalesController::class, 'previewPDF'])->name('preview');
+        Route::get('/download', [SalesController::class, 'generatePDF'])->name('pdf.download');
+    });
 
-
-    Route::get('/sales/pdf', [SalesController::class, 'generatePDF'])->name('sales.pdf');
-
-    Route::get('/sales/preview', [SalesController::class, 'previewPDF'])->name('sales.preview');
-
-    Route::get('/sales/download', [SalesController::class, 'generatePDF'])->name('sales.pdf.download');
-
+    // User logs route
+    Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
 });
 
 // Include authentication routes

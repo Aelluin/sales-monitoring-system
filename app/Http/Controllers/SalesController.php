@@ -7,6 +7,7 @@ use App\Models\Sale;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\PDF;
+use Illuminate\Support\Facades\Log;
 
 class SalesController extends Controller
 {
@@ -164,6 +165,8 @@ class SalesController extends Controller
         // Pass data to the view, including total sales count and years
         return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales', 'years'));
     }
+
+    // Daily Report
     public function dailyReport(Request $request)
     {
         // Get today's sales or filter by selected date
@@ -187,135 +190,161 @@ class SalesController extends Controller
         // Pass the necessary data to the view
         return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate'));
     }
+
+    // Show Weekly Sales Report
     public function showWeeklySales(Request $request)
-{
-    // Get the year, month, and week from the request or use defaults
-    $year = (int) $request->get('year', now()->year);
-    $month = (int) $request->get('month', now()->month);
-    $week = (int) $request->get('week', now()->weekOfYear);
+    {
+        // Get the year, month, and week from the request or use defaults
+        $year = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
+        $week = (int) $request->get('week', now()->weekOfYear);
 
-    // Ensure the selected week is within the selected month
-    $startOfMonth = Carbon::create($year, $month, 1);
-    $endOfMonth = $startOfMonth->copy()->endOfMonth();
+        // Ensure the selected week is within the selected month
+        $startOfMonth = Carbon::create($year, $month, 1);
+        $endOfMonth = $startOfMonth->copy()->endOfMonth();
 
-    // If the requested week is out of bounds, set it to the first week of the month
-    if ($week < 1 || $week > $startOfMonth->copy()->endOfMonth()->weekOfYear) {
-        $week = $startOfMonth->weekOfYear; // Default to the first week of the month
+        // If the requested week is out of bounds, set it to the first week of the month
+        if ($week < 1 || $week > $startOfMonth->copy()->endOfMonth()->weekOfYear) {
+            $week = $startOfMonth->weekOfYear; // Default to the first week of the month
+        }
+
+        // Fetch the start and end date of the selected week within the given month
+        $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
+        $endOfWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
+
+        // Ensure that the start and end of the week are within the selected month
+        if ($startOfWeek->month !== $month) {
+            // Instead of redirecting back, set a default valid week (first week of the month)
+            $startOfWeek = $startOfMonth->copy()->startOfWeek();
+            $endOfWeek = $startOfMonth->copy()->endOfWeek();
+
+            // Optionally, add a message indicating the issue
+            return redirect()->route('sales.showWeeklySales', [
+                'year' => $year,
+                'month' => $month,
+                'week' => $startOfMonth->weekOfYear,
+            ])->with('error', 'The selected week is not in the chosen month. Showing the first week of the month.');
+        }
+
+        try {
+            // Fetch sales data for the selected week
+            $salesData = Sale::whereBetween('created_at', [$startOfWeek, $endOfWeek])
+                             ->with('product')
+                             ->get();
+        } catch (\Exception $e) {
+            Log::error("Weekly Sales Error [Year: $year, Month: $month, Week: $week]: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Unable to fetch weekly sales data.');
+        }
+
+        // Ensure there's sales data
+        if ($salesData->isEmpty()) {
+            return redirect()->back()->with('error', 'No sales data found for the selected week.');
+        }
+
+        // Total revenue for the selected week
+        $totalRevenue = $salesData->sum(fn($sale) => (float) $sale->total_price);
+
+        // Aggregate sales by product
+        $weeklyProductSales = $this->aggregateProductSales($salesData);
+
+        // Labels for chart (the days of the week)
+        $weeklyLabels = [];
+        $weeklySales = [];
+
+        // Populate the chart data
+        foreach (range(0, 6) as $dayOffset) {
+            $currentDay = $startOfWeek->copy()->addDays($dayOffset);
+            $weeklyLabels[] = $currentDay->format('l'); // Day name
+            $weeklySales[] = $salesData->filter(function ($sale) use ($currentDay) {
+                return $sale->created_at->isSameDay($currentDay);
+            })->sum(fn($sale) => (float) $sale->total_price);
+        }
+
+        // Pass the data to the view
+        return view('sales.weekly', compact(
+            'weeklyProductSales',
+            'weeklyLabels',
+            'weeklySales',
+            'totalRevenue',
+            'week',
+            'year',
+            'month'
+        ));
     }
 
-    // Fetch the start and end date of the selected week within the given month
-    $startOfWeek = Carbon::now()->setISODate($year, $week)->startOfWeek();
-    $endOfWeek = Carbon::now()->setISODate($year, $week)->endOfWeek();
-
-    // Ensure that the start and end of the week are within the selected month
-    if ($startOfWeek->month !== $month) {
-        // Instead of redirecting back, set a default valid week (first week of the month)
-        $startOfWeek = $startOfMonth->copy()->startOfWeek();
-        $endOfWeek = $startOfMonth->copy()->endOfWeek();
-
-        // Optionally, add a message indicating the issue
-        return redirect()->route('sales.showWeeklySales', [
-            'year' => $year,
-            'month' => $month,
-            'week' => $startOfMonth->weekOfYear,
-        ])->with('error', 'The selected week is not in the chosen month. Showing the first week of the month.');
+    // Aggregate product sales by quantity and revenue
+    private function aggregateProductSales($salesData)
+    {
+        // Aggregate sales by product
+        $productSales = [];
+        foreach ($salesData as $sale) {
+            $productName = $sale->product->name;
+            if (!isset($productSales[$productName])) {
+                $productSales[$productName] = ['quantity_sold' => 0, 'total_revenue' => 0];
+            }
+            $productSales[$productName]['quantity_sold'] += $sale->quantity;
+            $productSales[$productName]['total_revenue'] += (float) $sale->total_price;
+        }
+        return $productSales;
     }
 
-    try {
-        // Fetch sales data for the selected week
-        $salesData = Sale::whereBetween('created_at', [$startOfWeek, $endOfWeek])
-                         ->with('product')
-                         ->get();
-    } catch (\Exception $e) {
-        Log::error("Weekly Sales Error [Year: $year, Month: $month, Week: $week]: " . $e->getMessage());
-        return redirect()->back()->with('error', 'Unable to fetch weekly sales data.');
+    // Generate PDF Report
+    public function generatePDF()
+    {
+        // Retrieve sales data with associated product information
+        $sales = Sale::with('product')->get();
+
+        // Load the PDF view with the data
+        $pdf = PDF::loadView('sales.pdf', compact('sales'))
+                  ->setOption('isHtml5ParserEnabled', true)
+                  ->setOption('isPhpEnabled', true);
+
+        // Download the generated PDF
+        return $pdf->download('sales_report.pdf');
     }
 
-    // Ensure there's sales data
-    if ($salesData->isEmpty()) {
-        return redirect()->back()->with('error', 'No sales data found for the selected week.');
+    // Preview PDF Report
+    public function previewPDF()
+    {
+        // Retrieve sales data with associated product information
+        $sales = Sale::with('product')->get();
+
+        // Generate the PDF content without immediate download
+        $pdf = PDF::loadView('sales.pdf', compact('sales'))
+                  ->setOption('isHtml5ParserEnabled', true)
+                  ->setOption('isPhpEnabled', true);
+
+        // Output the PDF and encode it as base64 for embedding
+        $pdfOutput = $pdf->output();
+        $pdfBase64 = base64_encode($pdfOutput);
+
+        // Return the preview view with the PDF data
+        return view('sales.preview', compact('pdfBase64'));
     }
 
-    // Total revenue for the selected week
-    $totalRevenue = $salesData->sum(fn($sale) => (float) $sale->total_price);
+    // Show Monthly Sales
+    public function showMonthlySales(Request $request)
+    {
+        $year = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
 
-    // Aggregate sales by product
-    $weeklyProductSales = $this->aggregateProductSales($salesData);
+        // Fetch sales for the specified month and year
+        $monthlySales = Sale::whereYear('created_at', $year)
+                            ->whereMonth('created_at', $month)
+                            ->with('product')
+                            ->get();
 
-    // Labels for chart (the days of the week)
-    $weeklyLabels = [];
-    $weeklySales = [];
+        // Check if there are no sales data for the selected month
+        if ($monthlySales->isEmpty()) {
+            return redirect()->back()->with('error', 'No sales data found for the selected month.');
+        }
 
-    // Populate the chart data
-    foreach (range(0, 6) as $dayOffset) {
-        $currentDay = $startOfWeek->copy()->addDays($dayOffset);
-        $weeklyLabels[] = $currentDay->format('l'); // Day name
-        $weeklySales[] = $salesData->filter(function ($sale) use ($currentDay) {
-            return $sale->created_at->isSameDay($currentDay);
-        })->sum(fn($sale) => (float) $sale->total_price);
+        // Calculate the total revenue for the month
+        $totalRevenue = $monthlySales->sum('total_price');
+
+        // Aggregate product sales by quantity and revenue
+        $monthlyProductSales = $this->aggregateProductSales($monthlySales);
+
+        return view('sales.monthly', compact('monthlyProductSales', 'totalRevenue', 'year', 'month'));
     }
-
-    // Pass the data to the view
-    return view('sales.weekly', compact(
-        'weeklyProductSales',
-        'weeklyLabels',
-        'weeklySales',
-        'totalRevenue',
-        'week',
-        'year',
-        'month'
-    ));
 }
-
-
-   private function aggregateProductSales($salesData)
-   {
-       // Aggregate sales by product
-       $productSales = [];
-       foreach ($salesData as $sale) {
-           $productName = $sale->product->name;
-           if (!isset($productSales[$productName])) {
-               $productSales[$productName] = ['quantity_sold' => 0, 'total_revenue' => 0];
-           }
-           $productSales[$productName]['quantity_sold'] += $sale->quantity;
-           $productSales[$productName]['total_revenue'] += (float) $sale->total_price;
-       }
-       return $productSales;
-   }
-
-
-
-   public function generatePDF()
-{
-    // Retrieve sales data with associated product information
-    $sales = Sale::with('product')->get();
-
-    // Load the PDF view with the data
-    $pdf = PDF::loadView('sales.pdf', compact('sales'))
-              ->setOption('isHtml5ParserEnabled', true)
-              ->setOption('isPhpEnabled', true);
-
-    // Download the generated PDF
-    return $pdf->download('sales_report.pdf');
-}
-
-public function previewPDF()
-{
-    // Retrieve sales data with associated product information
-    $sales = Sale::with('product')->get();
-
-    // Generate the PDF content without immediate download
-    $pdf = PDF::loadView('sales.pdf', compact('sales'))
-              ->setOption('isHtml5ParserEnabled', true)
-              ->setOption('isPhpEnabled', true);
-
-    // Output the PDF and encode it as base64 for embedding
-    $pdfOutput = $pdf->output();
-    $pdfBase64 = base64_encode($pdfOutput);
-
-    // Return the preview view with the PDF data
-    return view('sales.preview', compact('pdfBase64'));
-}
-
-}
-

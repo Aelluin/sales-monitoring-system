@@ -274,17 +274,8 @@
                                 </a>
                             </div>
 
-                            <!-- Bullet Pagination with Page Numbering -->
+                            <!-- Bullet Pagination -->
                             <div class="pagination">
-                                <!-- Page Numbering -->
-                                <div class="mb-2">
-                                    @for ($i = 1; $i <= $sales->lastPage(); $i++)
-                                        <a href="{{ $sales->url($i) }}" class="page-link {{ $i == $sales->currentPage() ? 'active' : '' }}">
-                                            {{ $i }}
-                                        </a>
-                                    @endfor
-                                </div>
-
                                 <!-- Arrows and Bullets -->
                                 <div class="flex items-center">
                                     <div class="arrow {{ $sales->onFirstPage() ? 'disabled' : '' }}">
