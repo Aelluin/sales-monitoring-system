@@ -144,6 +144,11 @@
                 height: 400px;
             }
         }
+
+        .active {
+    background-color: #1d4ed8; /* Blue background for active item */
+    color: white; /* White text for active item */
+}
     </style>
 </head>
 
@@ -180,34 +185,35 @@
                         <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
                     </a>
 
-                    <!-- Collapsible Report Menu -->
-                    <div x-data="{ dropdownOpen: false }" class="relative">
-                        <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
-                            <span class="material-icons mr-4 text-xl">assessment</span>
-                            <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
-                            <span class="material-icons ml-auto">arrow_drop_down</span>
-                        </a>
-                        <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
-                            <!-- Daily Sales -->
-                            <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
-                                :class="{'active': window.location.pathname == '/sales/daily'}">
-                                <span class="material-icons mr-2">event</span>
-                                Daily Sales
-                            </a>
-                            <!-- Weekly Sales -->
-                            <a href="/sales/weekly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
-                                :class="{'active': window.location.pathname == '/sales/weekly'}">
-                                <span class="material-icons mr-2">calendar_view_week</span>
-                                Weekly Sales
-                            </a>
-                            <!-- Monthly Sales -->
-                            <a href="/sales/monthly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
-                                :class="{'active': window.location.pathname == '/sales/monthly'}">
-                                <span class="material-icons mr-2">date_range</span>
-                                Monthly Sales
-                            </a>
-                        </div>
-                    </div>
+                   <!-- Collapsible Report Menu -->
+<div x-data="{ dropdownOpen: true }" class="relative"> <!-- Dropdown default open -->
+    <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
+        <span class="material-icons mr-4 text-xl">assessment</span>
+        <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
+        <span class="material-icons ml-auto">arrow_drop_down</span>
+    </a>
+    <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
+        <!-- Daily Sales -->
+        <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+            :class="{'active': window.location.pathname == '/sales/daily'}"> <!-- Active state -->
+            <span class="material-icons mr-2">event</span>
+            Daily Sales
+        </a>
+        <!-- Weekly Sales -->
+        <a href="/sales/weekly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+            :class="{'active': window.location.pathname == '/sales/weekly'}">
+            <span class="material-icons mr-2">calendar_view_week</span>
+            Weekly Sales
+        </a>
+        <!-- Monthly Sales -->
+        <a href="/sales/monthly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+            :class="{'active': window.location.pathname == '/sales/monthly'}">
+            <span class="material-icons mr-2">date_range</span>
+            Monthly Sales
+        </a>
+    </div>
+</div>
+
 
                     <!-- Logs Button -->
                     <a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
