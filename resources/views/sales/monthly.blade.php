@@ -1,275 +1,100 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script> <!-- Include Alpine.js -->
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"> <!-- Include Tailwind CSS -->
-    <title>Dashboard</title>
-    <style>
-        /* General Styling for Success and Error Messages */
-        .success, .error {
-            padding: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-            border-radius: 4px;
-        }
-
-        .success {
-            background-color: #2ecc71;
-            color: white;
-        }
-
-        .error {
-            background-color: #e74c3c;
-            color: white;
-        }
-
-        /* Table Styling */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        table th, table td {
-            padding: 12px;
-            text-align: center;
-            border-bottom: 1px solid #ccc; /* Lighter border color */
-        }
-
-        table th {
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        table tbody tr:nth-child(even) {
-            background-color: #f9f9f9;
-        }
-
-        table tbody tr:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Action Button Styling */
-        .action-buttons a, .action-buttons button {
-            text-decoration: none;
-            padding: 8px 12px;
-            margin: 5px;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        /* Button colors */
-        .edit-button {
-            background-color: #3498db; /* Blue */
-        }
-
-        .edit-button:hover {
-            background-color: #2980b9; /* Darker Blue */
-        }
-
-        .delete-button {
-            background-color: #e74c3c; /* Red */
-        }
-
-        .delete-button:hover {
-            background-color: #c0392b; /* Darker Red */
-        }
-
-        .create-product {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #27ae60;
-            color: white;
-            text-align: center;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
-
-        .create-product:hover {
-            background-color: #219150;
-        }
-
-        /* General Styles */
-        body {
-            background-color: #ffffff;
-            color: #333333;
-        }
-
-        header {
-            background-color: #f8f8f8;
-            color: #333333; /* Dark text color */
-        }
-    </style>
-</head>
-<body>
-<x-app-layout>
-    <div class="flex h-screen font-sans">
-        <div x-data="{ open: true }" :class="open ? 'w-64' : 'w-20'" class="flex flex-col h-full" style="background-color: #15151D; color: #ffffff;">
-            <div class="flex items-center justify-between p-4 border-b border-blue-700">
-                <div class="flex justify-center w-full">
-                    <img x-show="open" src="{{ asset('img/gg.png') }}" alt="My Dashboard" class="h-14 w-50 object-contain mx-auto" />
-                </div>
-                <button @click="open = !open" class="text-gray-400 hover:text-white focus:outline-none">
-                    <span class="material-icons text-2xl">menu</span>
-                </button>
-            </div>
-
-            <nav class="flex-1 mt-4 space-y-2 px-2">
-                <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">dashboard</span>
-                    <span x-show="open" class="flex-1 text-base">Dashboard</span>
-                </a>
-                <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">inventory</span>
-                    <span x-show="open" class="flex-1 text-base">Products</span>
-                </a>
-                <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">show_chart</span>
-                    <span x-show="open" class="flex-1 text-base">Sales</span>
-                </a>
-                <a href="/sales/report" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">assessment</span>
-                    <span x-show="open" class="flex-1 text-base">Report</span>
-                </a>
-            </nav>
-        </div>
-
-        <div class="flex-1 flex flex-col">
-            <header class="shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
-                <div class="flex items-center space-x-4">
-                    <div x-data="{ open: false }" class="relative">
-                        <div @click="open = !open" class="flex items-center cursor-pointer text-gray-800">
-                            <div>{{ Auth::user()->name }}</div>
-                            <div class="ml-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-transparent">
-                            <div class="py-1">
-                                <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
-                                    {{ __('Profile') }}
-                                </a>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <a href="{{ route('logout') }}"
-                                        onclick="event.preventDefault(); this.closest('form').submit();"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
-                                        {{ __('Log Out') }}
-                                    </a>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main class="flex-1 p-6 bg-white">
-                <div class="max-w-8xl mx-auto">
-                    <div class="bg-white overflow-hidden shadow-md rounded-lg">
-                        <div class="p-6 text-gray-900">
-
-                            <h1 class="text-2xl font-bold mb-4">All Products</h1>
-
-                            @if(session('success'))
-                                <div class="success">{{ session('success') }}</div>
-                            @endif
-
-                            @if(session('error'))
-                                <div class="error">{{ session('error') }}</div>
-                            @endif
-
-                            <div class="mb-4 flex justify-between items-center">
-                                <label for="sort" class="text-sm text-gray-700">Sort by stock status:</label>
-                                <select id="sort" class="p-2 border rounded" onchange="sortProducts(event)">
-                                    <option value="in_stock_first" selected>In Stock First</option>
-                                    <option value="low_stock_first">Low Stock First</option>
-                                </select>
-                            </div>
-
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th class="p-2 border-b">Name</th>
-                                        <th class="p-2 border-b">Price</th>
-                                        <th class="p-2 border-b">Quantity</th>
-                                        <th class="p-2 border-b">Description</th>
-                                        <th class="p-2 border-b">Stock Status</th>
-                                        <th class="p-2 border-b">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($products as $product)
-                                        <tr>
-                                            <td class="p-2 border-b">{{ $product->name }}</td>
-                                            <td class="p-2 border-b">₱{{ number_format($product->price, 2) }}</td>
-                                            <td class="p-2 border-b">{{ $product->quantity }}</td>
-                                            <td class="p-2 border-b">{{ $product->description }}</td>
-                                            <td class="p-2 border-b">
-                                                <span class="{{ $product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400' }}">
-                                                    {{ $product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock' }}
-                                                </span>
-                                            </td>
-                                            <td class="p-2 border-b action-buttons">
-                                                <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
-                                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete();">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="delete-button">Delete</button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-
-                            <div class="mt-4">
-                                <a href="{{ route('products.create') }}" class="create-product">Add Product</a>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-</x-app-layout>
-
 <script>
-    function sortProducts(event) {
-        const sortOption = event ? event.target.value : 'in_stock_first';
-        const productsTable = document.querySelector('table tbody');
-        const rows = Array.from(productsTable.rows);
+    // Pass the monthly data to JavaScript from the PHP variable
+const monthlyData = @json($monthlyData);
 
-        rows.sort((a, b) => {
-            const qtyA = parseInt(a.cells[2].textContent.trim());
-            const qtyB = parseInt(b.cells[2].textContent.trim());
+// Function to update the chart based on the selected year
+function updateChart(selectedYear) {
+const salesData = monthlyData[selectedYear] || {};
+const chartData = [
+salesData[1] || 0,
+salesData[2] || 0,
+salesData[3] || 0,
+salesData[4] || 0,
+salesData[5] || 0,
+salesData[6] || 0,
+salesData[7] || 0,
+salesData[8] || 0,
+salesData[9] || 0,
+salesData[10] || 0,
+salesData[11] || 0,
+salesData[12] || 0
+];
 
-            if (sortOption === 'in_stock_first') {
-                return qtyB - qtyA;
-            } else {
-                return qtyA - qtyB;
+monthlySalesChart.data.datasets[0].data = chartData;
+monthlySalesChart.update();
+}
+
+const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+const monthlySalesChart = new Chart(ctx, {
+type: 'line',
+data: {
+labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+datasets: [{
+    label: '',
+    data: [
+        monthlyData[2024][1] || 0,
+        monthlyData[2024][2] || 0,
+        monthlyData[2024][3] || 0,
+        monthlyData[2024][4] || 0,
+        monthlyData[2024][5] || 0,
+        monthlyData[2024][6] || 0,
+        monthlyData[2024][7] || 0,
+        monthlyData[2024][8] || 0,
+        monthlyData[2024][9] || 0,
+        monthlyData[2024][10] || 0,
+        monthlyData[2024][11] || 0,
+        monthlyData[2024][12] || 0
+    ],
+    borderColor: 'rgba(75, 192, 192, 1)',
+    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+    borderWidth: 2,
+    fill: true,
+    pointRadius: 5,
+    pointHoverRadius: 7,
+}]
+},
+options: {
+responsive: true,
+plugins: {
+    legend: {
+        display: false
+    },
+    tooltip: {
+        callbacks: {
+            label: function(tooltipItem) {
+                return '₱' + tooltipItem.raw.toLocaleString();
             }
-        });
-
-        rows.forEach(row => productsTable.appendChild(row));
+        }
     }
+},
+scales: {
+    y: {
+        beginAtZero: true,
+        title: {
+            display: true,
+            text: 'Sales Amount'
+        },
+        ticks: {
+            callback: function(value) {
 
-    function confirmDelete() {
-        return confirm('Are you sure you want to delete this product? This action cannot be undone.');
+                return '₱' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // commas
+            }
+        }
+    },
+    x: {
+        title: {
+            display: true,
+            text: 'Months'
+        }
     }
+}
+}
+});
 
-    window.onload = function() {
-        sortProducts();
-    }
+// Year selector
+document.getElementById('yearSelector').addEventListener('change', function() {
+updateChart(this.value);
+});
+
+
 </script>
-</body>
-</html>
