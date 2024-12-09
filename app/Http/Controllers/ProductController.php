@@ -94,4 +94,18 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Product deleted successfully!'); // Redirect with success message
     }
+    public function addStock(Request $request, Product $product)
+    {
+        // Validate the quantity input
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        // Add the stock to the current product's quantity
+        $product->quantity += $request->input('quantity');
+        $product->save();
+
+        // Redirect back with a success message
+        return redirect()->route('products.index')->with('success', 'Stock added successfully!');
+    }
 }

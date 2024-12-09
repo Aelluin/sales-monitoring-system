@@ -1,5 +1,4 @@
 <?php
-
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\SalesController;
@@ -37,10 +36,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Daily sales route
         Route::get('daily', [SalesController::class, 'dailyReport'])->name('daily');
 
-        // Weekly sales route with parameters for year, month, and week
-        Route::get('weekly/{year}/{month}/{week}', [SalesController::class, 'showWeeklySales'])
-            ->name('showWeeklySales');
-
         // Monthly sales route
         Route::get('monthly', [SalesController::class, 'showMonthlySales'])->name('monthly');
 
@@ -49,18 +44,28 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // Store route for creating a new sale
         Route::post('/', [SalesController::class, 'store'])->name('store');
-    });
 
-    // Sales PDF routes
-    Route::prefix('sales')->name('sales.')->group(function () {
+        // Sales PDF routes
         Route::get('/pdf', [SalesController::class, 'generatePDF'])->name('pdf');
         Route::get('/preview', [SalesController::class, 'previewPDF'])->name('preview');
         Route::get('/download', [SalesController::class, 'generatePDF'])->name('pdf.download');
+
+        // Weekly sales routes
+        Route::get('weekly', [SalesController::class, 'showWeeklyForm'])->name('showWeeklyForm');
+        Route::get('weekly/{year}/{month}/{week}', [SalesController::class, 'showWeeklySales'])->name('showWeeklySales');
+
+
+
+        // Weekly redirect route
+        Route::post('weekly-redirect', [SalesController::class, 'redirectToWeeklySales'])->name('weeklyRedirect');
     });
 
     // User logs route
     Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
 });
+
+Route::post('products/{product}/addStock', [ProductController::class, 'addStock'])->name('products.addStock');
+
 
 // Include authentication routes
 require __DIR__ . '/auth.php';

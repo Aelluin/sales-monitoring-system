@@ -28,13 +28,14 @@
 
         /* Table Styling */
         table {
-            width: 100%;
+            width: 95%; /* Set table to a smaller width */
+            margin: 0 auto;
             border-collapse: collapse;
             margin-bottom: 20px;
         }
 
         table th, table td {
-            padding: 12px;
+            padding: 10px 15px; /* Reduced padding for a more compact look */
             text-align: center;
             border-bottom: 1px solid #ccc; /* Lighter border color */
         }
@@ -53,15 +54,21 @@
         }
 
         /* Action Button Styling */
+        .action-buttons {
+            display: flex;
+            justify-content: space-evenly;
+        }
+
         .action-buttons a, .action-buttons button {
             text-decoration: none;
-            padding: 8px 12px;
-            margin: 5px;
+            padding: 6px 12px;
+            margin: 2px;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            font-size: 0.9rem;
         }
 
         /* Button colors */
@@ -83,7 +90,7 @@
 
         .create-product {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 8px 16px;
             background-color: #27ae60;
             color: white;
             text-align: center;
@@ -225,6 +232,29 @@
                                                     @method('DELETE')
                                                     <button type="submit" class="delete-button">Delete</button>
                                                 </form>
+
+                                                <div x-data="{ openAddStockModal: false }">
+                                                    <!-- Add Stock Button -->
+                                                    <button @click="openAddStockModal = true" class="add-stock-button bg-green-500 hover:bg-green-400 text-white py-2 px-4 rounded">
+                                                        Add Stock
+                                                    </button>
+
+                                                    <!-- Add Stock Modal -->
+                                                    <div x-show="openAddStockModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center" @click.away="openAddStockModal = false">
+                                                        <div class="bg-white p-6 rounded-lg w-80">
+                                                            <h3 class="text-xl mb-4">Add Stock to {{ $product->name }}</h3>
+                                                            <form action="{{ route('products.addStock', $product->id) }}" method="POST">
+                                                                @csrf
+                                                                <label for="quantity" class="block mb-2">Enter Quantity to Add</label>
+                                                                <input type="number" id="quantity" name="quantity" class="border p-2 w-full mb-4" required />
+                                                                <div class="flex justify-end">
+                                                                    <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded mr-2">Add</button>
+                                                                    <button type="button" @click="openAddStockModal = false" class="bg-red-500 text-white py-2 px-4 rounded">Cancel</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </td>
                                         </tr>
                                     @endforeach
