@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Sales Report</title>
     <style>
+        /* Sidebar & Content Styles */
         .highlighted-section {
             background-color: #e2f0f9;
             border: 1px solid #a0d3e8;
@@ -47,6 +48,15 @@
             margin-left: auto;
             margin-right: auto;
         }
+
+        /* Sidebar full-height */
+        .sidebar {
+            min-height: 100vh; /* Ensures sidebar stretches to full screen */
+        }
+
+        .main-content {
+            flex-grow: 1; /* Ensures content grows and fills space */
+        }
     </style>
 </head>
 
@@ -54,7 +64,8 @@
 
     <x-app-layout>
         <div x-data="{ sidebarOpen: true }" class="flex h-screen">
-            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
+            <!-- Sidebar -->
+            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col sidebar transition-all duration-300"
                 style="background-color: #15151D; color: #ffffff;">
                 <div class="flex items-center justify-between p-4 border-b border-blue-700">
                     <div class="flex justify-center w-full">
@@ -79,16 +90,12 @@
                         <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
                     </a>
                     <div x-data="{ dropdownOpen: false }" class="relative">
-                        <!-- Report Button -->
                         <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
                             <span class="material-icons mr-4 text-xl">assessment</span>
                             <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
                             <span class="material-icons ml-auto">arrow_drop_down</span>
                         </a>
-
-                        <!-- Dropdown content -->
                         <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
-                            <!-- Daily Sales Link with Calendar Icon, smaller text and aligned properly -->
                             <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
                                 <span class="material-icons mr-2">event</span>
                                 Daily Sales
@@ -98,7 +105,8 @@
                 </nav>
             </div>
 
-            <div class="flex-1 flex flex-col">
+            <!-- Main Content Area -->
+            <div class="flex-1 flex flex-col main-content">
                 <header class="shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
                     <div class="flex items-center space-x-4">
                         <div x-data="{ dropdownOpen: false }" class="relative">
@@ -110,16 +118,14 @@
                                     </svg>
                                 </div>
                             </div>
-
                             <div x-show="dropdownOpen" @click.outside="dropdownOpen = false" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white">
                                 <div class="py-1">
                                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
                                         {{ __('Profile') }}
                                     </a>
-
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <a href="{{ route('logout') }}"
+                                        <a href="{{ route('logout') }} "
                                            onclick="event.preventDefault(); this.closest('form').submit();"
                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
                                             {{ __('Log Out') }}
@@ -150,6 +156,14 @@
                         <h3 class="text-center text-lg font-semibold text-gray-800">Sales Chart</h3>
                         <div class="chart-container flex justify-center">
                             <canvas id="salesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Pie Chart Section -->
+                    <div class="chart-card">
+                        <h3 class="text-center text-lg font-semibold text-gray-800">Payment Method Distribution</h3>
+                        <div class="chart-container flex justify-center">
+                            <canvas id="paymentMethodChart"></canvas>
                         </div>
                     </div>
 
@@ -228,7 +242,27 @@
             document.getElementById('salesChart'),
             config
         );
+
+        // Payment Method Pie Chart
+        const paymentMethodLabels = @json($paymentLabels);  // Labels for each payment method
+        const paymentMethodData = @json($paymentCounts);    // Counts for each payment method
+
+        const paymentMethodChart = new Chart(
+            document.getElementById('paymentMethodChart'),
+            {
+                type: 'pie', // Pie chart
+                data: {
+                    labels: paymentMethodLabels,
+                    datasets: [{
+                        label: 'Payment Method Distribution',
+                        data: paymentMethodData,
+                        backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'], // Example colors
+                    }]
+                }
+            }
+        );
     </script>
+
 </body>
 
 </html>

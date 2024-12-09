@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,7 +10,8 @@
     <title>Create Sales</title>
     <style>
         /* General Styling for Success and Error Messages */
-        .success, .error {
+        .success,
+        .error {
             padding: 10px;
             margin-bottom: 20px;
             text-align: center;
@@ -17,12 +19,14 @@
         }
 
         .success {
-            background-color: #2ecc71; /* Green */
+            background-color: #2ecc71;
+            /* Green */
             color: white;
         }
 
         .error {
-            background-color: #e74c3c; /* Red */
+            background-color: #e74c3c;
+            /* Red */
             color: white;
         }
 
@@ -67,7 +71,8 @@
         .create-button {
             display: inline-block;
             padding: 10px 20px;
-            background-color: #27ae60; /* Green */
+            background-color: #27ae60;
+            /* Green */
             color: white;
             text-align: center;
             border-radius: 4px;
@@ -76,7 +81,8 @@
         }
 
         .create-button:hover {
-            background-color: #219150; /* Darker Green */
+            background-color: #219150;
+            /* Darker Green */
         }
 
         .back-link {
@@ -84,17 +90,20 @@
             margin-top: 10px;
             text-decoration: none;
             padding: 10px 20px;
-            background-color: #3498db; /* Blue */
+            background-color: #3498db;
+            /* Blue */
             color: white;
             border-radius: 4px;
             transition: background-color 0.3s ease;
         }
 
         .back-link:hover {
-            background-color: #2980b9; /* Darker Blue */
+            background-color: #2980b9;
+            /* Darker Blue */
         }
     </style>
 </head>
+
 <body class="bg-gray-100 font-sans">
 
     <x-app-layout>
@@ -220,14 +229,31 @@
                                 <label for="product_id">Product:</label>
                                 <select name="product_id" id="product_id" required>
                                     @foreach($products as $product)
-                                        <option value="{{ $product->id }}">
+                                        <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
                                             {{ $product->name }} - ₱{{ number_format($product->price, 2) }} (Stock: {{ $product->quantity }})
                                         </option>
                                     @endforeach
                                 </select>
+                                @error('product_id')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
 
                                 <label for="quantity">Quantity Sold:</label>
-                                <input type="number" name="quantity" id="quantity" required>
+                                <input type="number" name="quantity" id="quantity" value="{{ old('quantity') }}" required>
+                                @error('quantity')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
+
+                                <!-- Payment Method Dropdown -->
+                                <label for="payment_method">Payment Method:</label>
+                                <select name="payment_method" id="payment_method" required>
+                                    <option value="cash" {{ old('payment_method') == 'cash' ? 'selected' : '' }}>Cash</option>
+                                    <option value="online" {{ old('payment_method') == 'online' ? 'selected' : '' }}>Online</option>
+                                    <option value="credit_card" {{ old('payment_method') == 'credit_card' ? 'selected' : '' }}>Credit Card</option>
+                                </select>
+                                @error('payment_method')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
 
                                 <div class="mt-4">
                                     <button type="submit" class="create-button">Create Sale</button>
@@ -242,4 +268,5 @@
     </x-app-layout>
 
 </body>
+
 </html>
