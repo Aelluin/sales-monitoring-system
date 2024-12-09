@@ -10,107 +10,164 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <title>Sales Report</title>
     <style>
-        /* Sidebar & Content Styles */
-        .highlighted-section {
-            background-color: #e2f0f9;
-            border: 1px solid #a0d3e8;
-            border-radius: 0.5rem;
+        /* General Styling for Success and Error Messages */
+        .success,
+        .error {
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 4px;
         }
 
-        .product-card {
+        .success {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .error {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        /* General Styles */
+        body {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        header {
+            background-color: #f8f8f8;
+            color: #333333;
+        }
+
+        /* Form Styling */
+        form {
             background-color: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
         }
 
-        .product-card:hover {
-            transform: scale(1.05);
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
 
-        .chart-container {
-            position: relative;
-            height: 400px;
-            max-width: 1200px;
+        input[type="text"],
+        input[type="number"],
+        textarea {
             width: 100%;
-            margin: 0 auto;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
         }
 
-        .chart-card {
-            background-color: white;
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-top: 1rem;
-            max-width: 95%;
-            margin-left: auto;
-            margin-right: auto;
+        .create-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
         }
 
-        /* Sidebar full-height */
-        .sidebar {
-            min-height: 100vh; /* Ensures sidebar stretches to full screen */
+        .create-button:hover {
+            background-color: #219150;
         }
 
-        .main-content {
-            flex-grow: 1; /* Ensures content grows and fills space */
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: #2980b9;
         }
     </style>
 </head>
 
 <body class="bg-gray-100 font-sans">
-
     <x-app-layout>
-        <div x-data="{ sidebarOpen: true }" class="flex h-screen">
+        <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
             <!-- Sidebar -->
-            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col sidebar transition-all duration-300"
-                style="background-color: #15151D; color: #ffffff;">
+            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300" style="background-color: #15151D; color: #ffffff;">
                 <div class="flex items-center justify-between p-4 border-b border-blue-700">
                     <div class="flex justify-center w-full">
-                        <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard"
-                            class="h-14 w-50 object-contain mx-auto" />
+                        <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard" class="h-14 w-50 object-contain mx-auto" />
                     </div>
                     <button @click="sidebarOpen = !sidebarOpen" class="text-gray-400 hover:text-white focus:outline-none">
                         <span class="material-icons text-2xl">menu</span>
                     </button>
                 </div>
+
                 <nav class="flex-1 mt-4 space-y-2 px-2">
-                    <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                    <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                        :class="{'active': window.location.pathname == '/dashboard'}">
                         <span class="material-icons mr-4 text-xl">dashboard</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Dashboard</span>
                     </a>
-                    <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                    <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                        :class="{'active': window.location.pathname == '/products'}">
                         <span class="material-icons mr-4 text-xl">inventory</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Products</span>
                     </a>
-                    <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                    <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                        :class="{'active': window.location.pathname == '/sales'}">
                         <span class="material-icons mr-4 text-xl">show_chart</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
                     </a>
+
+                    <!-- Collapsible Report Menu -->
                     <div x-data="{ dropdownOpen: false }" class="relative">
-                        <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
+                        <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
                             <span class="material-icons mr-4 text-xl">assessment</span>
                             <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
                             <span class="material-icons ml-auto">arrow_drop_down</span>
                         </a>
                         <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
-                            <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
+                            <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                                :class="{'active': window.location.pathname == '/sales/daily'}">
                                 <span class="material-icons mr-2">event</span>
                                 Daily Sales
                             </a>
+                            <a href="/sales/weekly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                                :class="{'active': window.location.pathname == '/sales/weekly'}">
+                                <span class="material-icons mr-2">calendar_view_week</span>
+                                Weekly Sales
+                            </a>
+                            <a href="/sales/monthly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                                :class="{'active': window.location.pathname == '/sales/monthly'}">
+                                <span class="material-icons mr-2">date_range</span>
+                                Monthly Sales
+                            </a>
                         </div>
                     </div>
+
+                    <a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
+                        :class="{'logs-button-open': dropdownOpen}">
+                        <span class="material-icons mr-4 text-xl">history</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
+                    </a>
                 </nav>
             </div>
 
-            <!-- Main Content Area -->
-            <div class="flex-1 flex flex-col main-content">
+            <div class="flex-1 flex flex-col">
                 <header class="shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
                     <div class="flex items-center space-x-4">
-                        <div x-data="{ dropdownOpen: false }" class="relative">
-                            <div @click="dropdownOpen = !dropdownOpen" class="flex items-center cursor-pointer text-gray-800">
+                        <div x-data="{ open: false }" class="relative">
+                            <div @click="open = !open" class="flex items-center cursor-pointer text-gray-800">
                                 <div>{{ Auth::user()->name }}</div>
                                 <div class="ml-1">
                                     <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
@@ -118,16 +175,17 @@
                                     </svg>
                                 </div>
                             </div>
-                            <div x-show="dropdownOpen" @click.outside="dropdownOpen = false" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white">
+
+                            <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-transparent">
                                 <div class="py-1">
                                     <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
                                         {{ __('Profile') }}
                                     </a>
                                     <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <a href="{{ route('logout') }} "
-                                           onclick="event.preventDefault(); this.closest('form').submit();"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
+                                        <a href="{{ route('logout') }}"
+                                            onclick="event.preventDefault(); this.closest('form').submit();"
+                                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-200">
                                             {{ __('Log Out') }}
                                         </a>
                                     </form>
@@ -159,7 +217,6 @@
                         </div>
                     </div>
 
-                    <!-- Pie Chart Section -->
                     <div class="chart-card">
                         <h3 class="text-center text-lg font-semibold text-gray-800">Payment Method Distribution</h3>
                         <div class="chart-container flex justify-center">
@@ -175,7 +232,6 @@
         </div>
     </x-app-layout>
 
-    <!-- Chart.js Script -->
     <script>
         const labels = @json($productNames);
         const data = {
@@ -205,64 +261,32 @@
                         title: {
                             display: true,
                             text: 'Quantity Sold',
-                            font: {
-                                size: 16,
-                            }
+                            font: { size: 16 }
                         },
-                        ticks: {
-                            color: '#333',
-                            font: {
-                                size: 14,
-                            }
-                        }
+                        ticks: { color: '#333', font: { size: 14 } }
                     },
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Products',
-                            font: {
-                                size: 16,
-                            }
-                        },
-                        ticks: {
-                            color: '#333',
-                            font: {
-                                size: 14,
-                            },
-                            autoSkip: false,
-                            maxRotation: 0,
-                            minRotation: 0
-                        }
+                        title: { display: true, text: 'Products', font: { size: 16 } },
+                        ticks: { color: '#333', font: { size: 14 }, autoSkip: false, maxRotation: 0, minRotation: 0 }
                     }
                 }
             }
         };
 
-        const salesChart = new Chart(
-            document.getElementById('salesChart'),
-            config
-        );
+        const salesChart = new Chart(document.getElementById('salesChart'), config);
 
-        // Payment Method Pie Chart
-        const paymentMethodLabels = @json($paymentLabels);  // Labels for each payment method
-        const paymentMethodData = @json($paymentCounts);    // Counts for each payment method
-
-        const paymentMethodChart = new Chart(
-            document.getElementById('paymentMethodChart'),
-            {
-                type: 'pie', // Pie chart
-                data: {
-                    labels: paymentMethodLabels,
-                    datasets: [{
-                        label: 'Payment Method Distribution',
-                        data: paymentMethodData,
-                        backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6'], // Example colors
-                    }]
-                }
+        const paymentMethodChart = new Chart(document.getElementById('paymentMethodChart'), {
+            type: 'pie',
+            data: {
+                labels: @json($paymentLabels),
+                datasets: [{
+                    label: 'Payment Method Distribution',
+                    data: @json($paymentCounts),
+                    backgroundColor: ['#FF5733', '#33FF57', '#3357FF', '#FF33A6']
+                }]
             }
-        );
+        });
     </script>
-
 </body>
 
 </html>

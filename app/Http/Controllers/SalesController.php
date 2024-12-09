@@ -74,48 +74,47 @@ class SalesController extends Controller
 
     // Generate report for monthly sales and other metrics
    // Add this in your report method
-public function report()
-{
-    $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
-        ->groupBy('month')
-        ->orderBy('month')
-        ->get();
+  // Generate report for monthly sales and other metrics
+  public function report()
+  {
+      // Get monthly sales data
+      $monthlySales = Sale::selectRaw('MONTH(created_at) as month, SUM(total_price) as total_sales')
+          ->groupBy('month')
+          ->orderBy('month')
+          ->get();
 
-    $monthlyData = $this->fillMissingMonths($monthlySales);
-    $totalRevenue = Sale::sum('total_price');
+      $monthlyData = $this->fillMissingMonths($monthlySales);
+      $totalRevenue = Sale::sum('total_price');
 
-    $bestSellingProducts = Sale::selectRaw('product_id, SUM(quantity) as total_quantity')
-        ->groupBy('product_id')
-        ->orderByDesc('total_quantity')
-        ->with('product')
-        ->take(5)
-        ->get();
+      // Best-selling products with join to get product name
+      $bestSellingProducts = Sale::join('products', 'sales.product_id', '=', 'products.id')
+          ->selectRaw('products.name as product_name, SUM(sales.quantity) as total_quantity')
+          ->groupBy('products.name')
+          ->orderByDesc('total_quantity')
+          ->take(5)
+          ->get();
 
-    if ($bestSellingProducts->isEmpty()) {
-        $bestSellingProducts = collect([
-            (object)[
-                'product' => (object)['name' => 'No products sold'],
-                'total_quantity' => 0,
-            ]
-        ]);
-    }
+      // Handle empty best-selling products scenario
+      if ($bestSellingProducts->isEmpty()) {
+          $bestSellingProducts = collect([ (object)[ 'product_name' => 'No products sold', 'total_quantity' => 0 ] ]);
+      }
 
-    // Get payment method distribution
-    $paymentMethods = Sale::select('payment_method', DB::raw('count(*) as count'))
-        ->groupBy('payment_method')
-        ->get();
+      // Get payment method distribution
+      $paymentMethods = Sale::select('payment_method', DB::raw('count(*) as count'))
+          ->groupBy('payment_method')
+          ->get();
 
-    // Prepare data for chart
-    $paymentLabels = $paymentMethods->pluck('payment_method')->toArray();
-    $paymentCounts = $paymentMethods->pluck('count')->toArray();
+      // Initialize empty arrays for payment labels and counts if no data is found
+      $paymentLabels = $paymentMethods->isEmpty() ? [] : $paymentMethods->pluck('payment_method')->toArray();
+      $paymentCounts = $paymentMethods->isEmpty() ? [] : $paymentMethods->pluck('count')->toArray();
 
-    // Prepare best-selling products data
-    $productNames = $bestSellingProducts->pluck('product.name')->toArray();
-    $salesQuantities = $bestSellingProducts->pluck('total_quantity')->toArray();
+      // Prepare best-selling products data
+      $productNames = $bestSellingProducts->pluck('product_name')->toArray();
+      $salesQuantities = $bestSellingProducts->pluck('total_quantity')->toArray();
 
-    return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts', 'productNames', 'salesQuantities', 'paymentLabels', 'paymentCounts'));
-}
-
+      // Pass everything to the view
+      return view('sales.report', compact('monthlyData', 'totalRevenue', 'bestSellingProducts', 'productNames', 'salesQuantities', 'paymentLabels', 'paymentCounts'));
+  }
 
     private function fillMissingMonths($monthlySales)
     {
@@ -166,21 +165,38 @@ public function report()
     public function dailyReport(Request $request)
     {
         $selectedDate = $request->date ?: now()->toDateString();
+
+        // Get daily sales for the selected date
         $dailySales = Sale::whereDate('created_at', $selectedDate)->get();
+
+        // Calculate the total revenue for the day
         $totalRevenue = $dailySales->sum('total_price');
 
+        // Group sales by product ID and get the name and total quantity sold
         $salesData = $dailySales->groupBy('product_id')->map(function ($group) {
             return [
-                'name' => $group->first()->product->name,
+                'name' => $group->first()->product->name,  // Assuming you have a relation named 'product' on Sale model
                 'quantity' => $group->sum('quantity'),
             ];
         });
 
+        // Extract product names and quantities for the bar chart
         $productNames = $salesData->pluck('name')->toArray();
         $salesQuantities = $salesData->pluck('quantity')->toArray();
 
-        return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate'));
+        // Get payment method data (grouped by payment method)
+        $paymentMethods = $dailySales->groupBy('payment_method')->map(function ($group) {
+            return $group->count();
+        });
+
+        // If no payment data, set empty arrays
+        $paymentLabels = $paymentMethods->keys()->toArray();
+        $paymentCounts = $paymentMethods->values()->toArray();
+
+        // Pass all data to the view
+        return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate', 'paymentLabels', 'paymentCounts'));
     }
+
 
     public function showWeeklySales(Request $request)
     {
