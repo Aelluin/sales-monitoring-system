@@ -255,6 +255,25 @@
                                     <div class="text-red-500 text-sm">{{ $message }}</div>
                                 @enderror
 
+                                <!-- New Fields for Customer Information -->
+                                <label for="customer_name">Customer Name:</label>
+                                <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name') }}" required>
+                                @error('customer_name')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
+
+                                <label for="customer_email">Customer Email:</label>
+                                <input type="email" name="customer_email" id="customer_email" value="{{ old('customer_email') }}" required>
+                                @error('customer_email')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
+
+                                <label for="customer_address">Customer Address:</label>
+                                <textarea name="customer_address" id="customer_address" rows="4" required>{{ old('customer_address') }}</textarea>
+                                @error('customer_address')
+                                    <div class="text-red-500 text-sm">{{ $message }}</div>
+                                @enderror
+
                                 <div class="mt-4">
                                     <button type="submit" class="create-button">Create Sale</button>
                                     <a href="{{ route('sales.index') }}" class="back-link">Back to Sales</a>

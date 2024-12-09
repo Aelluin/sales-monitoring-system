@@ -22,35 +22,33 @@ class SalesController extends Controller
     // Process the sale and update inventory
     public function store(Request $request)
     {
-        // Validate incoming data
-        $validatedData = $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-            'payment_method' => 'required|string',
-        ]);
+        // Find the product based on the product_id
+        $product = Product::find($request->product_id);
 
-        try {
-            $product = Product::find($validatedData['product_id']);
-
-            if ($product->quantity < $validatedData['quantity']) {
-                return back()->with('error', 'Not enough stock available.');
-            }
-
-            $sale = new Sale();
-            $sale->product_id = $validatedData['product_id'];
-            $sale->quantity = $validatedData['quantity'];
-            $sale->payment_method = $validatedData['payment_method'];
-            $sale->total_price = $product->price * $validatedData['quantity'];
-            $sale->save();
-
-            $product->quantity -= $validatedData['quantity'];
-            $product->save();
-
-            return redirect()->route('sales.index')->with('success', 'Sale added successfully');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Something went wrong: ' . $e->getMessage());
+        if (!$product) {
+            return redirect()->route('sales.create')->with('error', 'Product not found');
         }
+
+        // Calculate the total price
+        $totalPrice = $product->price * $request->quantity;
+
+        // Create the sale record
+        $sale = new Sale();
+        $sale->product_id = $request->product_id;
+        $sale->quantity = $request->quantity;
+        $sale->total_price = $totalPrice;  // Set the total price
+        $sale->payment_method = $request->payment_method;
+        $sale->customer_name = $request->customer_name;
+        $sale->customer_email = $request->customer_email;
+        $sale->customer_address = $request->customer_address;
+        $sale->user_id = auth()->id(); // Set the user_id as the authenticated user
+        $sale->save();
+
+        // Redirect with a success message
+        return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
     }
+
+
 
     // Show all sales
     public function index()

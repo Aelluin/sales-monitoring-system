@@ -389,8 +389,14 @@
                                         <th class="p-2 border-b">Product Name</th>
                                         <th class="p-2 border-b">Quantity Sold</th>
                                         <th class="p-2 border-b">Total Price</th>
-                                        <th class="p-2 border-b">Payment Method</th> <!-- New Column -->
+                                        <th class="p-2 border-b">Payment Method</th>
+                                        <th class="p-2 border-b">Customer Name</th>
+                                        <th class="p-2 border-b">Customer Email</th> <!-- Customer Email Header -->
+                                        <th class="p-2 border-b">Customer Address</th>
+                                        <th class="p-2 border-b">Added By</th>
+                                        <th class="p-2 border-b">User Email</th>
                                         <th class="p-2 border-b">Date</th>
+
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -399,12 +405,20 @@
                                             <td class="p-2 border-b">{{ $sale->product->name }}</td>
                                             <td class="p-2 border-b">{{ $sale->quantity }}</td>
                                             <td class="p-2 border-b">₱{{ number_format($sale->total_price, 2) }}</td>
-                                            <td class="p-2 border-b">{{ $sale->payment_method }}</td> <!-- Display Payment Method -->
-                                            <td class="p-2 border-b">{{ $sale->created_at->format('F j, Y, g:i A') }}</td> <!-- Updated Date Format -->
+                                            <td class="p-2 border-b">{{ $sale->payment_method }}</td>
+                                            <td class="p-2 border-b">{{ $sale->customer_name }}</td>
+                                            <td class="p-2 border-b">{{ $sale->customer_email }}</td> <!-- Customer Email -->
+                                            <td class="p-2 border-b">{{ $sale->customer_address }}</td>
+                                            <td class="p-2 border-b">{{ optional($sale->user)->name ?? 'No user' }}</td>
+                                            <td class="p-2 border-b">{{ optional($sale->user)->email ?? 'No email' }}</td>
+                                            <td class="p-2 border-b">{{ $sale->created_at->format('F j, Y, g:i A') }}</td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
+
+
 
                             <div class="mt-4">
                                 <a href="{{ route('sales.create') }}" class="button create-button">Create New Sale</a>
