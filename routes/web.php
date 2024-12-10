@@ -147,8 +147,18 @@ Route::get('/sales/total', function() {
     }
 });
 
-Route::get('/sales/top-products', [SalesController::class, 'topProducts']);
+Route::get('/sales/recent-orders', [SalesController::class, 'recentOrders']);
+Route::get('/sales/seasonal-trends/{year}', [SalesController::class, 'seasonalTrends']);
+Route::get('/sales/top-performing-products', [SalesController::class, 'topPerformingProducts']);
+Route::get('/sales/revenue-breakdown', [SalesController::class, 'revenueBreakdown']);
+Route::get('/sales/compare/{year}', [SalesController::class, 'compareSales']);
+Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
 
+// Define routes to fetch seasonal data, total sales, top products, and recent orders
+Route::get('/dashboard/seasonal-data/{year}', [SalesController::class, 'getSeasonalData']);
+Route::get('/dashboard/total-sales/{year}', [SalesController::class, 'getTotalSales']);
+Route::get('/dashboard/top-products/{year}', [SalesController::class, 'getTopProducts']);
+Route::get('/dashboard/recent-orders/{year}', [SalesController::class, 'getRecentOrders']);
 
 // Include authentication routes
 require __DIR__ . '/auth.php';
