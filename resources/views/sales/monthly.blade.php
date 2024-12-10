@@ -18,11 +18,11 @@
 
         /* Adjust sidebar to always span the full height */
         .sidebar {
-    height: 200vh !important; /* Full viewport height */
-    overflow-y: auto !important; /* Enable scrolling if content exceeds height */
-    background-color: #15151D; /* Background color */
-    color: #ffffff; /* Text color */
-}
+            height: 200vh !important;
+            overflow-y: auto !important;
+            background-color: #15151D;
+            color: #ffffff;
+        }
 
         table {
             width: 100%;
@@ -63,6 +63,12 @@
             font-weight: bold;
             color: #333;
         }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
     </style>
 </head>
 
@@ -70,8 +76,7 @@
     <x-app-layout>
         <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
             <!-- Sidebar -->
-            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="sidebar flex flex-col transition-all duration-300"
-                style="background-color: #15151D; color: #ffffff;">
+            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="sidebar flex flex-col transition-all duration-300">
                 <div class="flex items-center justify-between p-4 border-b border-blue-700">
                     <div class="flex justify-center w-full">
                         <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard"
@@ -243,12 +248,66 @@
                         </footer>
                     @endif
 
-                    <!-- Chart.js Bar Chart -->
-                    <div style="width: 60%; margin: 0 auto;">
-                        <canvas id="productSalesChart"></canvas>
+                    <!-- Chart.js Bar Chart and Payment Methods Chart -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Product Sales Chart Card -->
+                        <div class="content-card">
+                            <h3 class="text-center font-semibold text-lg mb-4">Product Sales</h3>
+                            <div class="chart-container">
+                                <canvas id="productSalesChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods Chart Card -->
+                        <div class="content-card">
+                            <h3 class="text-center font-semibold text-lg mb-4">Payment Methods</h3>
+                            <div class="chart-container">
+                                <canvas id="paymentChart"></canvas>
+                            </div>
+                        </div>
                     </div>
 
                     <script>
+                        const paymentLabels = @json($paymentLabels);
+                        const paymentCounts = @json($paymentCounts);
+
+                        const paymentData = {
+                            labels: paymentLabels,
+                            datasets: [{
+                                label: 'Payment Methods',
+                                data: paymentCounts,
+                                backgroundColor: [
+                                    'rgba(255, 99, 132, 0.6)',
+                                    'rgba(54, 162, 235, 0.6)',
+                                    'rgba(255, 206, 86, 0.6)',
+                                    'rgba(75, 192, 192, 0.6)'
+                                ]
+                            }]
+                        };
+
+                        const paymentChartConfig = {
+                            type: 'pie',
+                            data: paymentData,
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        align: 'center',
+                                        labels: {
+                                            boxWidth: 20,
+                                            padding: 10
+                                        }
+                                    },
+                                    tooltip: {
+                                        enabled: true
+                                    }
+                                }
+                            }
+                        };
+
+                        const paymentChart = new Chart(document.getElementById('paymentChart'), paymentChartConfig);
+
                         // Data for the chart
                         var productNames = @json($productNames);
                         var quantities = @json($quantities);
@@ -256,12 +315,12 @@
                         // Create the chart
                         var ctx = document.getElementById('productSalesChart').getContext('2d');
                         var productSalesChart = new Chart(ctx, {
-                            type: 'bar', // Bar chart
+                            type: 'bar',
                             data: {
-                                labels: productNames, // Product names as labels
+                                labels: productNames,
                                 datasets: [{
                                     label: 'Products Sold',
-                                    data: quantities, // Quantity sold for each product
+                                    data: quantities,
                                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
                                     borderColor: 'rgba(54, 162, 235, 1)',
                                     borderWidth: 1
@@ -277,6 +336,7 @@
                             }
                         });
                     </script>
+
                 </main>
             </div>
         </div>
