@@ -378,54 +378,53 @@ class SalesController extends Controller
 
         return response()->json($orders);
     }
-
     public function monthly(Request $request)
-{
-    // Get the selected month and year, or default to the current month and year
-    $month = $request->input('month', Carbon::now()->format('m')); // Default to current month (numeric)
-    $year = $request->input('year', Carbon::now()->format('Y')); // Default to current year
+    {
+        // Get the selected month and year, or default to the current month and year
+        $month = $request->input('month', Carbon::now()->format('m')); // Default to current month (numeric)
+        $year = $request->input('year', Carbon::now()->format('Y')); // Default to current year
 
-    // Create a Carbon instance for the first and last day of the selected month
-    $startDate = Carbon::createFromFormat('Y-m', "$year-$month")->startOfMonth();
-    $endDate = Carbon::createFromFormat('Y-m', "$year-$month")->endOfMonth();
+        // Create a Carbon instance for the first and last day of the selected month
+        $startDate = Carbon::createFromFormat('Y-m', "$year-$month")->startOfMonth();
+        $endDate = Carbon::createFromFormat('Y-m', "$year-$month")->endOfMonth();
 
-    // Fetch sales data for the selected month
-    $monthlySales = Sale::with(['product']) // Eager load product details
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->orderBy('created_at', 'asc')
-        ->get();
+        // Fetch paginated sales data for the selected month
+        $monthlySales = Sale::with(['product']) // Eager load product details
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at', 'asc')
+            ->paginate(15);  // Paginate with 15 items per page
 
-    // Calculate total sales and total quantity sold
-    $totalSales = $monthlySales->sum('total_price');
-    $totalQuantity = $monthlySales->sum('quantity');
+        // Calculate total sales and total quantity sold
+        $totalSales = $monthlySales->sum('total_price');
+        $totalQuantity = $monthlySales->sum('quantity');
 
-    // Prepare data for the chart (sales by product)
-    $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->groupBy('product_id')
-        ->with('product')
-        ->get();
+        // Prepare data for the chart (sales by product)
+        $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('product_id')
+            ->with('product')
+            ->get();
 
-    $productNames = $productSales->pluck('product.name'); // Product names
-    $quantities = $productSales->pluck('total_quantity'); // Quantities sold for each product
+        $productNames = $productSales->pluck('product.name'); // Product names
+        $quantities = $productSales->pluck('total_quantity'); // Quantities sold for each product
 
-    // Get the full month name for display
-    $monthName = $startDate->format('F Y');
+        // Get the full month name for display
+        $monthName = $startDate->format('F Y');
 
-    // Get all years with sales data for the year selector
-    $years = Sale::selectRaw('YEAR(created_at) as year')
-        ->distinct()
-        ->orderBy('year', 'desc')
-        ->pluck('year');
+        // Get all years with sales data for the year selector
+        $years = Sale::selectRaw('YEAR(created_at) as year')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year');
 
-    // Pass the data to the view
-    return view('sales.monthly', compact('monthlySales', 'totalSales', 'totalQuantity', 'productNames', 'quantities', 'month', 'year', 'monthName', 'years'));
-}
+        // Pass the data to the view
+        return view('sales.monthly', compact('monthlySales', 'totalSales', 'totalQuantity', 'productNames', 'quantities', 'month', 'year', 'monthName', 'years'));
+    }
 public function weekly(Request $request)
 {
-    // Get selected year and week or default to null
+    // Get selected year and week or default to current year and null for week
     $year = $request->input('year', Carbon::now()->year);
-    $week = $request->input('week', null); // Null if no week selected
+    $week = (int)$request->input('week', null); // Force it to be an integer, default to null
 
     // Get distinct years available in the sales data
     $years = Sale::selectRaw('YEAR(created_at) as year')
@@ -448,7 +447,7 @@ public function weekly(Request $request)
         }
     }
 
-    // Initialize variables
+    // Initialize variables for storing weekly sales and totals
     $weeklySales = collect();
     $totalSales = 0;
     $totalQuantity = 0;
@@ -486,6 +485,7 @@ public function weekly(Request $request)
         'productNames', 'quantities', 'week', 'year', 'weeksInYear', 'years',
         'selectedWeekStart', 'selectedWeekEnd'
     ));
+
 }
 
 }
