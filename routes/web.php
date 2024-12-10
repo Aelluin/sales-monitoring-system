@@ -160,5 +160,12 @@ Route::get('/dashboard/total-sales/{year}', [SalesController::class, 'getTotalSa
 Route::get('/dashboard/top-products/{year}', [SalesController::class, 'getTopProducts']);
 Route::get('/dashboard/recent-orders/{year}', [SalesController::class, 'getRecentOrders']);
 
+
+
+Route::get('/sales/weekly', [SalesController::class, 'weekly'])->name('sales.weekly');
+Route::get('sales/monthly', [SalesController::class, 'monthly'])->name('sales.monthly');
+
+
+
 // Include authentication routes
 require __DIR__ . '/auth.php';

@@ -50,12 +50,18 @@ class SalesController extends Controller
         // Calculate the total price for the sale
         $totalPrice = $product->price * $request->quantity;
 
+        // Modify payment_method to change 'credit_card' to 'credit card'
+        $paymentMethod = $request->payment_method === 'credit_card' ? 'credit card' : $request->payment_method;
+
+        // Debug: Log the payment method before saving
+        Log::info('Payment Method: ' . $paymentMethod);
+
         // Create the sale record
         $sale = new Sale();
         $sale->product_id = $request->product_id;
         $sale->quantity = $request->quantity;
         $sale->total_price = $totalPrice;
-        $sale->payment_method = $request->payment_method;
+        $sale->payment_method = $paymentMethod;  // Use the modified payment method
         $sale->customer_name = $request->customer_name;
         $sale->customer_email = $request->customer_email;
         $sale->customer_address = $request->customer_address;
@@ -69,6 +75,7 @@ class SalesController extends Controller
         // Redirect to sales index with a success message
         return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
     }
+
 
     // Show all sales
     public function index()
@@ -203,24 +210,30 @@ class SalesController extends Controller
 
     // Show weekly form
     public function showWeeklyForm(Request $request)
-    {
-        $selectedYear = $request->get('year', now()->year);
-        $selectedMonth = $request->get('month', now()->month);
-        $selectedWeek = $request->get('week', now()->weekOfYear);
+{
+    $selectedYear = $request->get('year', now()->year);
+    $selectedMonth = $request->get('month', now()->month);
+    $selectedWeek = $request->get('week', now()->weekOfYear);
 
-        $years = range(Carbon::now()->year - 5, Carbon::now()->year);
-        $months = range(1, 12);
+    $years = range(Carbon::now()->year - 5, Carbon::now()->year);
+    $months = range(1, 12);
 
-        return view('sales.weekly', compact('years', 'months', 'selectedYear', 'selectedMonth', 'selectedWeek'));
-    }
+    // Calculate total revenue for the selected week
+    $startOfWeek = Carbon::create($selectedYear, $selectedMonth, 1)
+        ->startOfMonth()
+        ->addWeeks($selectedWeek - 1)
+        ->startOfWeek();
+    $endOfWeek = $startOfWeek->copy()->endOfWeek();
+
+    $totalRevenue = Sale::whereBetween('created_at', [$startOfWeek, $endOfWeek])->sum('total_price');
+
+    return view('sales.weekly', compact('years', 'months', 'selectedYear', 'selectedMonth', 'selectedWeek', 'totalRevenue'));
+}
+
 
     // Show weekly sales report
     public function showWeeklySales($year, $month, $week)
     {
-        $selectedYear = $year;
-        $selectedMonth = $month;
-        $selectedWeek = $week;
-
         $startOfWeek = Carbon::create($year, $month, 1)
             ->startOfMonth()
             ->addWeeks($week - 1)
@@ -228,8 +241,6 @@ class SalesController extends Controller
         $endOfWeek = $startOfWeek->copy()->endOfWeek();
 
         $weeklySales = Sale::whereBetween('created_at', [$startOfWeek, $endOfWeek])->get();
-
-        $totalRevenue = $weeklySales->sum('total_price');
 
         $weeklyLabels = [];
         $dailySales = [];
@@ -239,27 +250,12 @@ class SalesController extends Controller
                 $currentDay->startOfDay(),
                 $currentDay->endOfDay(),
             ])->sum('total_price');
-            $weeklyLabels[] = $currentDay->format('l');
+            $weeklyLabels[] = $currentDay->format('l'); // Full weekday name
         }
 
-        $weeklyProductSales = $weeklySales->groupBy('product_id')->map(function ($sales) {
-            $product = $sales->first()->product;
-            return [
-                'product_name' => $product->name,
-                'quantity_sold' => $sales->sum('quantity'),
-                'total_revenue' => $sales->sum('total_price'),
-            ];
-        })->values();
-
         return view('sales.weekly', compact(
-            'totalRevenue',
-            'weeklySales',
             'weeklyLabels',
-            'dailySales',
-            'weeklyProductSales',
-            'selectedYear',
-            'selectedMonth',
-            'selectedWeek'
+            'dailySales'
         ));
     }
 
@@ -382,5 +378,114 @@ class SalesController extends Controller
 
         return response()->json($orders);
     }
+
+    public function monthly(Request $request)
+{
+    // Get the selected month and year, or default to the current month and year
+    $month = $request->input('month', Carbon::now()->format('m')); // Default to current month (numeric)
+    $year = $request->input('year', Carbon::now()->format('Y')); // Default to current year
+
+    // Create a Carbon instance for the first and last day of the selected month
+    $startDate = Carbon::createFromFormat('Y-m', "$year-$month")->startOfMonth();
+    $endDate = Carbon::createFromFormat('Y-m', "$year-$month")->endOfMonth();
+
+    // Fetch sales data for the selected month
+    $monthlySales = Sale::with(['product']) // Eager load product details
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->orderBy('created_at', 'asc')
+        ->get();
+
+    // Calculate total sales and total quantity sold
+    $totalSales = $monthlySales->sum('total_price');
+    $totalQuantity = $monthlySales->sum('quantity');
+
+    // Prepare data for the chart (sales by product)
+    $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+        ->whereBetween('created_at', [$startDate, $endDate])
+        ->groupBy('product_id')
+        ->with('product')
+        ->get();
+
+    $productNames = $productSales->pluck('product.name'); // Product names
+    $quantities = $productSales->pluck('total_quantity'); // Quantities sold for each product
+
+    // Get the full month name for display
+    $monthName = $startDate->format('F Y');
+
+    // Get all years with sales data for the year selector
+    $years = Sale::selectRaw('YEAR(created_at) as year')
+        ->distinct()
+        ->orderBy('year', 'desc')
+        ->pluck('year');
+
+    // Pass the data to the view
+    return view('sales.monthly', compact('monthlySales', 'totalSales', 'totalQuantity', 'productNames', 'quantities', 'month', 'year', 'monthName', 'years'));
+}
+public function weekly(Request $request)
+{
+    // Get selected year and week or default to null
+    $year = $request->input('year', Carbon::now()->year);
+    $week = $request->input('week', null); // Null if no week selected
+
+    // Get distinct years available in the sales data
+    $years = Sale::selectRaw('YEAR(created_at) as year')
+        ->distinct()
+        ->orderBy('year', 'desc')
+        ->pluck('year');
+
+    // Generate weeks for the selected year
+    $weeksInYear = collect();
+    for ($i = 1; $i <= 53; $i++) {
+        try {
+            $startOfWeek = Carbon::now()->setISODate($year, $i)->startOfWeek();
+            $endOfWeek = Carbon::now()->setISODate($year, $i)->endOfWeek();
+            $weeksInYear->push([
+                'start' => $startOfWeek,
+                'end' => $endOfWeek,
+            ]);
+        } catch (\Exception $e) {
+            break; // Stop if the week number exceeds the valid range for the year
+        }
+    }
+
+    // Initialize variables
+    $weeklySales = collect();
+    $totalSales = 0;
+    $totalQuantity = 0;
+    $productNames = collect();
+    $quantities = collect();
+    $selectedWeekStart = null;
+    $selectedWeekEnd = null;
+
+    // If a valid week is selected, fetch sales data
+    if ($week && $week >= 1 && $week <= count($weeksInYear)) {
+        $selectedWeekStart = $weeksInYear[$week - 1]['start'];
+        $selectedWeekEnd = $weeksInYear[$week - 1]['end'];
+
+        $weeklySales = Sale::with(['product'])
+            ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $totalSales = $weeklySales->sum('total_price');
+        $totalQuantity = $weeklySales->sum('quantity');
+
+        $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+            ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
+            ->groupBy('product_id')
+            ->with('product')
+            ->get();
+
+        $productNames = $productSales->pluck('product.name');
+        $quantities = $productSales->pluck('total_quantity');
+    }
+
+    // Pass data to the view
+    return view('sales.weekly', compact(
+        'weeklySales', 'totalSales', 'totalQuantity',
+        'productNames', 'quantities', 'week', 'year', 'weeksInYear', 'years',
+        'selectedWeekStart', 'selectedWeekEnd'
+    ));
+}
 
 }

@@ -1,137 +1,140 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Sales Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <h1>Weekly Sales Report</h1>
 
-@section('content')
-<div class="container">
-    <!-- Form for selecting year, month, and week -->
-    <form action="{{ route('sales.weeklyRedirect') }}" method="POST">
-        @csrf
-        <label for="year">Year:</label>
-        <select name="year" id="year">
-            @foreach($years as $yearOption)
-                <option value="{{ $yearOption }}" {{ $yearOption == $selectedYear ? 'selected' : '' }}>{{ $yearOption }}</option>
-            @endforeach
-        </select>
+    <!-- Year and Week Selector Form -->
+    <form method="GET" action="{{ route('sales.weekly') }}">
+        <fieldset style="border: 2px solid #ddd; padding: 20px; margin-bottom: 20px;">
+            <legend>Select Year and Week</legend>
 
-        <label for="month">Month:</label>
-        <select name="month" id="month">
-            @foreach($months as $monthOption)
-                <option value="{{ $monthOption }}" {{ $monthOption == $selectedMonth ? 'selected' : '' }}>
-                    {{ \Carbon\Carbon::create()->month($monthOption)->format('F') }}
-                </option>
-            @endforeach
-        </select>
+            <!-- Year Selector -->
+            <label for="year">Select a Year:</label>
+            <select name="year" id="year" style="padding: 5px; margin-bottom: 15px; width: 200px;">
+                <option value="">-- Choose a Year --</option>
+                @foreach ($years as $yearOption)
+                    <option value="{{ $yearOption }}" {{ $yearOption == $year ? 'selected' : '' }}>{{ $yearOption }}</option>
+                @endforeach
+            </select>
 
-        <label for="week">Week:</label>
-        <select name="week" id="week">
-            @foreach(range(1, 52) as $weekOption)
-                <option value="{{ $weekOption }}" {{ $weekOption == $selectedWeek ? 'selected' : '' }}>
-                    Week {{ $weekOption }}
-                </option>
-            @endforeach
-        </select>
+            <br>
 
-        <button type="submit" class="btn btn-primary mt-3">Go to Weekly Sales</button>
+            <!-- Week Selector -->
+            <label for="week">Select a Week:</label>
+            <select name="week" id="week" style="padding: 5px; margin-bottom: 15px; width: 200px;">
+                <option value="">-- Choose a Week --</option>
+                @foreach ($weeksInYear as $index => $week)
+                    <option value="{{ $index + 1 }}" {{ $index + 1 == $week ? 'selected' : '' }}>
+                        Week {{ $index + 1 }} ({{ \Carbon\Carbon::parse($week['start'])->format('M d') }} - {{ \Carbon\Carbon::parse($week['end'])->format('M d') }})
+                    </option>
+                @endforeach
+            </select>
+
+            <br>
+
+            <button type="submit" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;">
+                Get Report
+            </button>
+        </fieldset>
     </form>
 
-    <h1 class="mt-4">Weekly Sales Report</h1>
-    <p>
-        <strong>Week:</strong> {{ $selectedWeek }} |
-        <strong>Month:</strong> {{ \Carbon\Carbon::create()->month($selectedMonth)->format('F') }} |
-        <strong>Year:</strong> {{ $selectedYear }}
-    </p>
+    <!-- Sales Report Header -->
+@php
+// Ensure $week is an integer and validate the selection
+$week = isset($week) ? (int) $week : null; // Convert the week value to an integer if set
 
-    <!-- Total Revenue -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h3>Total Revenue for the Week: ${{ number_format($totalRevenue, 2) }}</h3>
-        </div>
+// Determine header text based on week selection
+if ($week && isset($weeksInYear[$week - 1])) {
+    // Retrieve corresponding week start and end dates
+    $selectedWeek = $weeksInYear[$week - 1];
+    $startDate = \Carbon\Carbon::parse($selectedWeek['start'])->format('M d');
+    $endDate = \Carbon\Carbon::parse($selectedWeek['end'])->format('M d');
+    $headerText = "Sales Report for Week $week ($startDate - $endDate)";
+} else {
+    // Display a prompt message when no week is selected or invalid
+    $headerText = "Please select a year and week to view the sales report.";
+}
+@endphp
+
+<h2>{{ $headerText }}</h2>
+
+@if(empty($week) || empty($weeklySales))
+<p>No sales data available. Please select a year and week.</p>
+@else
+<!-- Sales Data Table -->
+<table border="1" style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Sale ID</th>
+            <th>Product Name</th>
+            <th>Quantity Sold</th>
+            <th>Total Price</th>
+            <th>Payment Method</th>
+            <th>Sale Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($weeklySales as $sale)
+            <tr>
+                <td>{{ $loop->iteration }}</td>
+                <td>{{ $sale->id }}</td>
+                <td>{{ $sale->product->name }}</td>
+                <td>{{ $sale->quantity }}</td>
+                <td>${{ number_format($sale->total_price, 2) }}</td>
+                <td>{{ $sale->payment_method }}</td>
+                <td>{{ $sale->created_at->format('Y-m-d H:i') }}</td>
+            </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<!-- Sales Summary -->
+<footer style="margin-top: 20px;">
+    <p><strong>Total Sales:</strong> ${{ number_format($totalSales, 2) }}</p>
+    <p><strong>Total Quantity Sold:</strong> {{ $totalQuantity }}</p>
+</footer>
+@endif
+
+    <!-- Chart.js Bar Chart -->
+    <div style="width: 80%; margin: 0 auto;">
+        <canvas id="productSalesChart"></canvas>
     </div>
 
-    <!-- Chart for Daily Sales -->
-    @if(!empty($dailySales) && count($dailySales) > 0)
-    <div class="card mb-4">
-        <div class="card-body">
-            <h4>Sales by Day</h4>
-            <canvas id="weeklySalesChart"></canvas>
-        </div>
-    </div>
-    @else
-    <div class="alert alert-warning">No sales data available for the selected week.</div>
-    @endif
+    <script>
+        // Data for the chart (ensure JSON format is correct)
+        var productNames = @json($productNames);
+        var quantities = @json($quantities);
 
-    <!-- Weekly Product Sales Summary -->
-    @if(!empty($weeklyProductSales) && count($weeklyProductSales) > 0)
-    <div class="card">
-        <div class="card-body">
-            <h4>Product Sales Summary</h4>
-            <table class="table table-striped">
-                <thead>
-                    <tr>
-                        <th>Product Name</th>
-                        <th>Quantity Sold</th>
-                        <th>Total Revenue</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($weeklyProductSales as $data)
-                        <tr>
-                            <td>{{ $data['product_name'] }}</td>
-                            <td>{{ $data['quantity_sold'] }}</td>
-                            <td>${{ number_format($data['total_revenue'], 2) }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @else
-    <div class="alert alert-warning">No product sales data available for the selected week.</div>
-    @endif
-</div>
-
-<!-- Include Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const ctx = document.getElementById('weeklySalesChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'bar',
+        // Create the chart
+        var ctx = document.getElementById('productSalesChart').getContext('2d');
+        var productSalesChart = new Chart(ctx, {
+            type: 'bar', // Bar chart
             data: {
-                labels: @json($weeklyLabels),  // Days of the week (e.g., Sunday, Monday, etc.)
+                labels: productNames, // Product names as labels
                 datasets: [{
-                    label: 'Daily Sales ($)',
-                    data: @json($dailySales),  // Sales data for each day of the week
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
+                    label: 'Products Sold',
+                    data: quantities, // Quantity sold for each product
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)', // Bar color
+                    borderColor: 'rgba(54, 162, 235, 1)', // Bar border color
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return '$' + value.toFixed(2);  // Format Y-axis with $ symbol
-                            }
-                        }
-                    }
-                },
-                responsive: true,
-                plugins: {
-                    legend: {
-                        position: 'top',
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(tooltipItem) {
-                                return '$' + tooltipItem.raw.toFixed(2);  // Format tooltip with $ symbol
-                            }
-                        }
+                        beginAtZero: true
                     }
                 }
             }
         });
-    });
-</script>
-@endsection
+    </script>
+</body>
+</html>
