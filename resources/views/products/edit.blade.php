@@ -6,7 +6,7 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <title>Create Sales</title>
+    <title>Edit Product</title>
     <style>
         /* General Styling for Success and Error Messages */
         .success, .error {
@@ -63,36 +63,36 @@
             font-size: 14px;
         }
 
-        /* Action Button Styling */
-        .create-button {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #27ae60; /* Green */
-            color: white;
-            text-align: center;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
-        }
+       /* Action Button Styling */
+    .create-button, .update-button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #27ae60; /* Green */
+        color: white;
+        text-align: center;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
 
-        .create-button:hover {
-            background-color: #219150; /* Darker Green */
-        }
+    .create-button:hover, .update-button:hover {
+        background-color: #219150; /* Darker Green */
+    }
 
-        .back-link {
-            display: inline-block;
-            margin-top: 10px;
-            text-decoration: none;
-            padding: 10px 20px;
-            background-color: #3498db; /* Blue */
-            color: white;
-            border-radius: 4px;
-            transition: background-color 0.3s ease;
-        }
+    .back-link {
+        display: inline-block;
+        margin-top: 10px;
+        text-decoration: none;
+        padding: 10px 20px;
+        background-color: #3498db; /* Blue */
+        color: white;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
 
-        .back-link:hover {
-            background-color: #2980b9; /* Darker Blue */
-        }
+    .back-link:hover {
+        background-color: #2980b9; /* Darker Blue */
+    }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -220,9 +220,7 @@
                             <label for="price">Price:</label>
                             <input type="number" name="price" id="price" value="{{ old('price', $product->price) }}" required>
 
-                            <label for="quantity">Quantity:</label>
-                            <input type="number" name="quantity" id="quantity" value="{{ old('quantity', $product->quantity) }}" required>
-
+                            <!-- Removed the quantity section -->
                             <label for="description">Description:</label>
                             <textarea name="description" id="description">{{ old('description', $product->description) }}</textarea>
 
