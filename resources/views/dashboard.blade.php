@@ -9,6 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <title>Dashboard</title>
+    <style>
+        #seasonalTrendChart {
+            max-width: 600px;
+            max-height: 400px;
+        }
+    </style>
 </head>
 
 <body>
@@ -45,173 +51,196 @@
                 </nav>
             </div>
 
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col">
-                <header class="bg-white shadow px-6 py-2 border-b border-gray-200 flex justify-end items-center h-16">
-                    <div class="flex items-center space-x-4">
-                        <div x-data="{ open: false }" class="relative">
-                            <div @click="open = !open" class="flex items-center cursor-pointer text-gray-800">
-                                <div>{{ Auth::user()->name }}</div>
-                                <div class="ml-1">
-                                    <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                    </svg>
-                                </div>
-                            </div>
-                            <div x-show="open" x-transition class="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white">
-                                <div class="py-1">
-                                    <a href="{{ route('profile.edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('Profile') }}</a>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <a href="{{ route('logout') }}"
-                                           onclick="event.preventDefault(); this.closest('form').submit();"
-                                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">{{ __('Log Out') }}</a>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </header>
+            <!-- Main content area -->
+            <div class="flex-1 p-6 overflow-y-auto">
+                <h1 class="text-3xl font-semibold mb-6">Dashboard</h1>
 
-                <!-- Main Content Area -->
-                <main class="flex-1 p-6 bg-gray-100">
-                    <div class="max-w-7xl mx-auto">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="bg-white overflow-hidden shadow-md rounded-lg p-6 text-gray-900">
-                                <h2 class="text-xl font-bold mb-4 text-center">Monthly Sales Overview</h2>
-                                <!-- Year Selector -->
-                                <div class="mb-4">
-                                    <label for="yearSelector" class="block text-gray-700">Select Year:</label>
-                                    <select id="yearSelector" class="block w-full mt-1 border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                                        <option value="2024" selected>2024</option>
-                                        <option value="2023">2023</option>
-                                        <option value="2022">2022</option>
-                                        <option value="2021">2021</option>
-                                    </select>
-                                </div>
-                                <canvas id="monthlySalesChart"></canvas>
-                            </div>
-                            <div class="bg-white overflow-hidden shadow-md rounded-lg p-6 text-gray-900">
-                                <h2 class="text-xl font-bold mb-4 text-center">Key Metrics</h2>
-                                <div class="flex flex-col space-y-4">
-                                    <div class="flex justify-between">
-                                        <span>Total Sales:</span>
-                                        <span class="font-bold">₱{{ number_format($totalSales, 2) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span>Average Order Value:</span>
-                                        <span class="font-bold">₱{{ number_format($averageOrderValue, 2) }}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- Year Selector -->
+                <div class="mb-6">
+                    <label for="yearSelector" class="font-semibold text-xl">Select Year</label>
+                    <select id="yearSelector" class="p-2 border border-gray-300 rounded-md mt-2">
+                        <option value="2023">2023</option>
+                        <option value="2024">2024</option>
+                    </select>
+                </div>
+
+                <!-- Seasonal Sales Trends Section -->
+                <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+                    <h2 class="text-2xl font-semibold mb-4">Seasonal Sales Trends</h2>
+                    <div class="flex justify-center items-center">
+                        <canvas id="seasonalTrendChart" style="width: 100%; height: auto;"></canvas>
                     </div>
-                </main>
+                </div>
+
+                <!-- Other Dashboard Content -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="bg-white shadow-lg rounded-lg p-6">
+                        <h3 class="text-xl font-semibold">Total Sales</h3>
+                        <p id="totalSales" class="text-gray-500">Loading...</p>
+                    </div>
+                    <div class="bg-white shadow-lg rounded-lg p-6">
+                        <h3 class="text-xl font-semibold">Top Products</h3>
+                        <ul id="topProducts" class="text-gray-500">Loading top products...</ul>
+                    </div>
+                    <div class="bg-white shadow-lg rounded-lg p-6">
+                        <h3 class="text-xl font-semibold">Recent Orders</h3>
+                        <ul id="recentOrders" class="text-gray-500">Loading recent orders...</ul>
+                    </div>
+                </div>
             </div>
         </div>
+    </x-app-layout>
 
-        <script>
-            // Pass the monthly data to JavaScript from the PHP variable
-const monthlyData = @json($monthlyData);
+    <script>
+        // Function to fetch all required data
+        document.addEventListener('DOMContentLoaded', () => {
+            const yearSelector = document.getElementById('yearSelector');
+            fetchSeasonalData(yearSelector.value);
+            fetchTotalSales();
+            fetchTopProducts();
+            fetchRecentOrders();
 
-// Function to update the chart based on the selected year
-function updateChart(selectedYear) {
-    const salesData = monthlyData[selectedYear] || {};
-    const chartData = [
-        salesData[1] || 0,
-        salesData[2] || 0,
-        salesData[3] || 0,
-        salesData[4] || 0,
-        salesData[5] || 0,
-        salesData[6] || 0,
-        salesData[7] || 0,
-        salesData[8] || 0,
-        salesData[9] || 0,
-        salesData[10] || 0,
-        salesData[11] || 0,
-        salesData[12] || 0
-    ];
+            yearSelector.addEventListener('change', (e) => {
+                fetchSeasonalData(e.target.value);
+            });
+        });
 
-    monthlySalesChart.data.datasets[0].data = chartData;
-    monthlySalesChart.update();
+        // Fetching Seasonal Sales Trends Data
+        function fetchSeasonalData(year) {
+            console.log("Fetching data for year:", year);
+
+            fetch(`/sales/seasonal-trends/${year}`)
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Fetched Data:", data);
+
+                    const seasons = ["Winter", "Spring", "Summer", "Fall"];
+                    const itemsSold = [0, 0, 0, 0];
+
+                    data.forEach(item => {
+                        const seasonIndex = seasons.indexOf(item.season);
+                        if (seasonIndex !== -1) {
+                            itemsSold[seasonIndex] = item.total_items_sold || 0;
+                        }
+                    });
+
+                    if (window.seasonalChart) {
+                        window.seasonalChart.data.datasets[0].data = itemsSold;
+                        window.seasonalChart.update();
+                    } else {
+                        const ctx = document.getElementById('seasonalTrendChart').getContext('2d');
+                        window.seasonalChart = new Chart(ctx, {
+                            type: 'line',
+                            data: {
+                                labels: seasons,
+                                datasets: [{
+                                    label: 'Total Items Sold per Season',
+                                    data: itemsSold,
+                                    borderColor: '#3498DB',  // Color of the line
+                                    backgroundColor: 'rgba(52, 152, 219, 0.2)',  // Light background for the area under the line
+                                    borderWidth: 3,  // Thicker line
+                                    tension: 0.4,  // Smoother curve
+                                    pointRadius: 5,  // Bigger data points
+                                    pointBackgroundColor: '#2980B9'  // Point color
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: {
+                                    legend: {
+                                        position: 'bottom',
+                                        labels: {
+                                            font: { size: 14 },
+                                            boxWidth: 20,
+                                            padding: 10,
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Seasonal Sales Trends (Items Sold)',
+                                        font: {
+                                            size: 16,
+                                            weight: 'bold'
+                                        },
+                                        color: '#333',
+                                        padding: { top: 10, bottom: 20 }
+                                    }
+                                },
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            stepSize: 10,
+                                        },
+                                        grid: {
+                                            color: 'rgba(0, 0, 0, 0.1)'  // Lighter grid lines
+                                        }
+                                    },
+                                    x: {
+                                        grid: {
+                                            color: 'rgba(0, 0, 0, 0.1)'  // Lighter grid lines
+                                        }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    alert('Error fetching seasonal data');
+                });
+        }
+
+        // Fetching Total Sales Data
+        function fetchTotalSales() {
+            fetch('/sales/total')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('#totalSales').innerText = data.total
+                        ? `$${data.total.toLocaleString()}`
+                        : 'No data available';
+                })
+                .catch(err => {
+                    console.error('Error fetching total sales:', err);
+                    document.querySelector('#totalSales').innerText = `Error: ${err.message}`;
+                });
+        }
+
+        // Fetching Top Products Data
+        function fetchTopProducts() {
+            fetch('/products/top')
+                .then(response => response.json())
+                .then(data => {
+                    const topProductsContainer = document.querySelector('#topProducts');
+                    if (data && data.length) {
+                        topProductsContainer.innerHTML = data.map(
+                            product => `<li>${product.name}: ${product.sales} units</li>`
+                        ).join('');
+                    } else {
+                        topProductsContainer.innerHTML = '<p>No top products available</p>';
+                    }
+                })
+                .catch(err => {
+                    console.error('Error fetching top products:', err);
+                    document.querySelector('#topProducts').innerHTML = `Error: ${err.message}`;
+                });
+        }
+
+        // Fetching Recent Orders Data
+       public function recentOrders()
+{
+    $recentOrders = Sale::with('product')->orderBy('created_at', 'desc')->take(5)->get();
+
+    // Check if orders are found
+    if ($recentOrders->isEmpty()) {
+        return response()->json(['message' => 'No recent orders found.'], 404);
+    }
+
+    return response()->json($recentOrders);
 }
 
-const ctx = document.getElementById('monthlySalesChart').getContext('2d');
-const monthlySalesChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-        datasets: [{
-            label: '',
-            data: [
-                monthlyData[2024][1] || 0,
-                monthlyData[2024][2] || 0,
-                monthlyData[2024][3] || 0,
-                monthlyData[2024][4] || 0,
-                monthlyData[2024][5] || 0,
-                monthlyData[2024][6] || 0,
-                monthlyData[2024][7] || 0,
-                monthlyData[2024][8] || 0,
-                monthlyData[2024][9] || 0,
-                monthlyData[2024][10] || 0,
-                monthlyData[2024][11] || 0,
-                monthlyData[2024][12] || 0
-            ],
-            borderColor: 'rgba(75, 192, 192, 1)',
-            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-            borderWidth: 2,
-            fill: true,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: {
-            legend: {
-                display: false
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(tooltipItem) {
-                        return '₱' + tooltipItem.raw.toLocaleString();
-                    }
-                }
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Sales Amount'
-                },
-                ticks: {
-                    callback: function(value) {
-
-                        return '₱' + value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); // commas
-                    }
-                }
-            },
-            x: {
-                title: {
-                    display: true,
-                    text: 'Months'
-                }
-            }
-        }
-    }
-});
-
-// Year selector
-document.getElementById('yearSelector').addEventListener('change', function() {
-    updateChart(this.value);
-});
-
-
-        </script>
-
-    </x-app-layout>
+    </script>
 </body>
 
 </html>

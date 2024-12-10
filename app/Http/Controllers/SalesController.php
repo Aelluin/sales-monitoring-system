@@ -18,37 +18,49 @@ class SalesController extends Controller
         $products = Product::paginate(15);
         return view('sales.create', compact('products'));
     }
+// Process the sale and update inventory
+public function store(Request $request)
+{
+    // Find the product based on the product_id
+    $product = Product::find($request->product_id);
 
-    // Process the sale and update inventory
-    public function store(Request $request)
-    {
-        // Find the product based on the product_id
-        $product = Product::find($request->product_id);
-
-        if (!$product) {
-            return redirect()->route('sales.create')->with('error', 'Product not found');
-        }
-
-        // Calculate the total price
-        $totalPrice = $product->price * $request->quantity;
-
-        // Create the sale record
-        $sale = new Sale();
-        $sale->product_id = $request->product_id;
-        $sale->quantity = $request->quantity;
-        $sale->total_price = $totalPrice;  // Set the total price
-        $sale->payment_method = $request->payment_method;
-        $sale->customer_name = $request->customer_name;
-        $sale->customer_email = $request->customer_email;
-        $sale->customer_address = $request->customer_address;
-        $sale->user_id = auth()->id(); // Set the user_id as the authenticated user
-        $sale->save();
-
-        // Redirect with a success message
-        return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
+    if (!$product) {
+        return redirect()->route('sales.create')->with('error', 'Product not found');
     }
 
+    // Debugging: Check stock and requested quantity
+    // dd($product->quantity, $request->quantity); // Uncomment for debugging if needed
 
+    // Handle null stock by treating it as 0 (although it shouldn't happen due to default(0) in migration)
+    $productStock = $product->quantity ?? 0;  // If quantity is null, default to 0
+
+    // Check if there is enough stock available for the sale
+    if ($productStock < $request->quantity) {
+        return redirect()->route('sales.create')->with('error', 'Not enough stock available');
+    }
+
+    // Calculate the total price for the sale
+    $totalPrice = $product->price * $request->quantity;
+
+    // Create the sale record
+    $sale = new Sale();
+    $sale->product_id = $request->product_id;
+    $sale->quantity = $request->quantity;
+    $sale->total_price = $totalPrice; // Set the total price
+    $sale->payment_method = $request->payment_method;
+    $sale->customer_name = $request->customer_name;
+    $sale->customer_email = $request->customer_email;
+    $sale->customer_address = $request->customer_address;
+    $sale->user_id = auth()->id(); // Set the user_id as the authenticated user
+    $sale->save();
+
+    // After the sale is created, reduce the stock for the product
+    $product->quantity -= $request->quantity;
+    $product->save();
+
+    // Redirect to sales index with a success message
+    return redirect()->route('sales.index')->with('success', 'Sale created successfully!');
+}
 
     // Show all sales
     public function index()
@@ -110,33 +122,37 @@ class SalesController extends Controller
 
     public function dashboard()
     {
-        $monthlySales = Sale::selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(total_price) as total_sales')
-            ->groupBy('year', 'month')
-            ->orderBy('year')
-            ->orderBy('month')
-            ->get();
+        // Calculate total revenue
+        $totalRevenue = Sale::sum('total_price');
 
-        $monthlyData = [];
-        foreach ($monthlySales as $sale) {
-            $monthlyData[$sale->year][$sale->month] = $sale->total_sales;
-        }
-
-        $years = Sale::selectRaw('YEAR(created_at) as year')->distinct()->orderBy('year')->pluck('year')->toArray();
-        foreach ($years as $year) {
-            for ($month = 1; $month <= 12; $month++) {
-                if (!isset($monthlyData[$year][$month])) {
-                    $monthlyData[$year][$month] = 0;
-                }
-            }
-        }
-
-        // Calculate total revenue, handle cases where no sales exist
-        $totalRevenue = Sale::sum('total_price') ?? 0;
+        // Calculate total number of sales
         $totalSalesCount = Sale::count();
+
+        // Calculate the total sales value
         $totalSales = Sale::sum('total_price');
+
+        // Calculate average order value
         $averageOrderValue = $totalSalesCount > 0 ? $totalRevenue / $totalSalesCount : 0;
 
-        return view('dashboard', compact('monthlyData', 'totalRevenue', 'totalSalesCount', 'averageOrderValue', 'totalSales', 'years'));
+        // Get the top 5 best-selling products
+        $bestSellingProducts = Sale::join('products', 'sales.product_id', '=', 'products.id')
+            ->selectRaw('products.name as product_name, SUM(sales.quantity) as total_quantity')
+            ->groupBy('products.name')
+            ->orderByDesc('total_quantity')
+            ->take(5)
+            ->get();
+
+        // Get the recent orders
+        $recentOrders = Sale::with('product')->orderBy('created_at', 'desc')->take(5)->get();
+
+        return view('dashboard', compact(
+            'totalRevenue',
+            'totalSalesCount',
+            'totalSales',
+            'averageOrderValue',
+            'bestSellingProducts',
+            'recentOrders'
+        ));
     }
     public function dailyReport(Request $request)
     {
@@ -287,7 +303,58 @@ class SalesController extends Controller
         }
         return $productSales;
     }
+    // Method to get seasonal trends
+    public function getSeasonalTrends($year)
+    {
+        // Ensure that we are filtering by the selected year
+        $sales = Sale::selectRaw('
+                SUM(quantity) as total_items_sold,
+                CASE
+                    WHEN MONTH(created_at) BETWEEN 12 AND 2 THEN "Winter"
+                    WHEN MONTH(created_at) BETWEEN 3 AND 5 THEN "Spring"
+                    WHEN MONTH(created_at) BETWEEN 6 AND 8 THEN "Summer"
+                    WHEN MONTH(created_at) BETWEEN 9 AND 11 THEN "Fall"
+                END as season
+            ')
+            ->whereYear('created_at', $year)  // Filter by the selected year
+            ->groupBy('season')
+            ->get();
 
+        // Check if the data exists
+        if ($sales->isEmpty()) {
+            return response()->json(['message' => 'No sales data found for this year.'], 404);
+        }
 
+        // Return the data in a structure the frontend can use
+        return response()->json($sales);
+    }
+    public function topProducts()
+    {
+        $topProducts = Sale::join('products', 'sales.product_id', '=', 'products.id')
+            ->selectRaw('products.name as product_name, SUM(sales.quantity) as total_quantity')
+            ->groupBy('products.name')
+            ->orderByDesc('total_quantity')
+            ->take(5)
+            ->get();
+
+        // Check if products are found
+        if ($topProducts->isEmpty()) {
+            return response()->json(['message' => 'No top products found.'], 404);
+        }
+
+        return response()->json($topProducts);
+    }
+
+    public function recentOrders()
+{
+    $recentOrders = Sale::with('product')->orderBy('created_at', 'desc')->take(5)->get();
+
+    // Check if orders are found
+    if ($recentOrders->isEmpty()) {
+        return response()->json(['message' => 'No recent orders found.'], 404);
+    }
+
+    return response()->json($recentOrders);
+}
 
 }
