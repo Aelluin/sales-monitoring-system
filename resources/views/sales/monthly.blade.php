@@ -35,6 +35,7 @@
         table td {
             padding: 8px 12px;
             text-align: center;
+            border: 1px solid #ddd;
         }
 
         table th {
@@ -250,6 +251,13 @@
 
                     <!-- Chart.js Bar Chart and Payment Methods Chart -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Payment Methods Chart Card -->
+                        <div class="content-card">
+                            <h3 class="text-center font-semibold text-lg mb-4">Payment Methods</h3>
+                            <div class="chart-container">
+                                <canvas id="paymentChart"></canvas>
+                            </div>
+                        </div>
                         <!-- Product Sales Chart Card -->
                         <div class="content-card">
                             <h3 class="text-center font-semibold text-lg mb-4">Product Sales</h3>
@@ -258,13 +266,7 @@
                             </div>
                         </div>
 
-                        <!-- Payment Methods Chart Card -->
-                        <div class="content-card">
-                            <h3 class="text-center font-semibold text-lg mb-4">Payment Methods</h3>
-                            <div class="chart-container">
-                                <canvas id="paymentChart"></canvas>
-                            </div>
-                        </div>
+
                     </div>
 
                     <script>

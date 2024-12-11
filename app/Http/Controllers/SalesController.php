@@ -80,7 +80,7 @@ class SalesController extends Controller
     // Show all sales
     public function index()
     {
-        $sales = Sale::with('product')->orderBy('created_at', 'desc')->paginate(15);
+        $sales = Sale::with('product')->orderBy('created_at', 'desc')->paginate(10);
         return view('sales.index', compact('sales'));
     }
 
@@ -441,7 +441,6 @@ class SalesController extends Controller
         'years'
     ));
 }
-
 public function weekly(Request $request)
 {
     // Get selected year and week or default to current year and null for week
@@ -478,11 +477,16 @@ public function weekly(Request $request)
     $selectedWeekStart = null;
     $selectedWeekEnd = null;
 
+    // Initialize paymentLabels and paymentCounts to empty arrays in case no valid week is selected
+    $paymentLabels = [];
+    $paymentCounts = [];
+
     // If a valid week is selected, fetch sales data
     if ($week && $week >= 1 && $week <= count($weeksInYear)) {
         $selectedWeekStart = $weeksInYear[$week - 1]['start'];
         $selectedWeekEnd = $weeksInYear[$week - 1]['end'];
 
+        // Fetch weekly sales data
         $weeklySales = Sale::with(['product'])
             ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
             ->orderBy('created_at', 'asc')
@@ -491,6 +495,7 @@ public function weekly(Request $request)
         $totalSales = $weeklySales->sum('total_price');
         $totalQuantity = $weeklySales->sum('quantity');
 
+        // Product sales data
         $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
             ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
             ->groupBy('product_id')
@@ -499,15 +504,24 @@ public function weekly(Request $request)
 
         $productNames = $productSales->pluck('product.name');
         $quantities = $productSales->pluck('total_quantity');
+
+        // Payment method statistics for the week
+        $paymentMethodCounts = Sale::select('payment_method', DB::raw('COUNT(*) as count'))
+            ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
+            ->groupBy('payment_method')
+            ->get();
+
+        // Prepare payment methods and counts for chart
+        $paymentLabels = $paymentMethodCounts->pluck('payment_method')->toArray();
+        $paymentCounts = $paymentMethodCounts->pluck('count')->toArray();
     }
 
     // Pass data to the view
     return view('sales.weekly', compact(
         'weeklySales', 'totalSales', 'totalQuantity',
         'productNames', 'quantities', 'week', 'year', 'weeksInYear', 'years',
-        'selectedWeekStart', 'selectedWeekEnd'
+        'selectedWeekStart', 'selectedWeekEnd', 'paymentLabels', 'paymentCounts'
     ));
-
 }
 
 

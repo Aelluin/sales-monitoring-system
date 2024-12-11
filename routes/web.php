@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SalesController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserLogController;
@@ -9,14 +10,10 @@ use App\Models\Sale;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Http\Middleware\RoleMiddleware;
 
-// Route for the home page
-Route::get('/', function () {
-    return view('welcome');
-});
-
-// Dashboard route, protected by authentication and verification
-Route::middleware(['auth', 'verified'])->group(function () {
+// Apply authentication, verification, and admin role middleware to the dashboard and subsequent routes
+Route::middleware(['auth', 'verified', RoleMiddleware::class . ':admin'])->group(function () {
     // Dashboard route
     Route::get('/dashboard', [SalesController::class, 'dashboard'])->name('dashboard');
 
@@ -67,7 +64,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
 });
 
-// Add stock route
+// Add stock route (keeping this outside the admin middleware since it's not specifically marked for admin)
 Route::post('products/{product}/addStock', [ProductController::class, 'addStock'])->name('products.addStock');
 
 // In routes/web.php or routes/api.php
@@ -81,6 +78,7 @@ Route::get('/products/top', function() {
             ->orderBy('sales_count', 'desc')
             ->take(5)
             ->get(['name', DB::raw('count(*) as sales')]);
+
 
         // Log the top products
         Log::info('Top Products:', $topProducts->toArray());
@@ -160,12 +158,46 @@ Route::get('/dashboard/total-sales/{year}', [SalesController::class, 'getTotalSa
 Route::get('/dashboard/top-products/{year}', [SalesController::class, 'getTopProducts']);
 Route::get('/dashboard/recent-orders/{year}', [SalesController::class, 'getRecentOrders']);
 
-
-
 Route::get('/sales/weekly', [SalesController::class, 'weekly'])->name('sales.weekly');
 Route::get('sales/monthly', [SalesController::class, 'monthly'])->name('sales.monthly');
 
+// Sales staff should be redirected if they try to access the logs route
+Route::middleware(['auth', 'verified', RoleMiddleware::class . ':salesstaff'])->group(function () {
+    Route::get('/logs', function () {
+        return redirect()->route('dashboard');
+    });
+});
 
+// Prevent admins from accessing the home route and redirect them to dashboard.
+// Sales staff will always have access to the home route.
+Route::get('/home', function () {
+    // Check if the user is authenticated
+    if (auth()->user()) {
+        // Check if the user has the 'admin' role
+        if (auth()->user()->hasRole('admin')) {
+            // Admins are redirected to the dashboard
+            return redirect()->route('dashboard');
+        } elseif (auth()->user()->hasRole('salesstaff')) {
+            // Sales staff can always go to the home page
+            return app(HomeController::class)->index();
+        }
+    }
+
+    // Default action: for other users, show the home page
+    return app(HomeController::class)->index();
+})->name('home');
+
+// Admin users can access logs
+Route::middleware(['auth', 'verified', RoleMiddleware::class . ':admin'])->group(function () {
+    Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
+});
+
+// Sales staff get redirected if they try to access logs
+Route::middleware(['auth', 'verified', RoleMiddleware::class . ':salesstaff'])->group(function () {
+    Route::get('/logs', function () {
+        return redirect()->route('dashboard');
+    });
+});
 
 // Include authentication routes
 require __DIR__ . '/auth.php';

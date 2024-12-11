@@ -124,13 +124,14 @@
                             </a>
                         </div>
                     </div>
-
+                    @if(Auth::user() && Auth::user()->hasRole('admin'))
                     <!-- Logs Button -->
                     <a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
                         :class="{'logs-button-open': dropdownOpen}">
                         <span class="material-icons mr-4 text-xl">history</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
                     </a>
+                    @endif
                 </nav>
             </div>
 
