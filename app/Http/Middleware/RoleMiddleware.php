@@ -9,26 +9,30 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string $role)
     {
-        // Ensure the user is authenticated
+        // Check if the user is authenticated
         if (Auth::check()) {
             $user = Auth::user();
 
-            // Check if the user has the required role
-            if ($user->role === $role) {
-                // Allow the user with the required role to proceed
-                return $next($request);
+            // Allow admins to access everything without restriction
+            if ($user->hasRole('admin')) {
+                return $next($request); // Admin can access everything
             }
 
-            // Check if the role is 'salesstaff', and if so, redirect to dashboard
-            if ($role === 'salesstaff' && $user->role === 'salesstaff') {
-                return redirect()->route('dashboard');
+            // If the user has the specific role (e.g., salesstaff)
+            if ($user->hasRole($role)) {
+                return $next($request); // Allowed role can access the route
             }
 
-            // For other roles or unauthorized access, redirect to home
-            return redirect()->route('home')->with('error', 'Unauthorized access. You do not have permission to view this page.');
+            // If the user is sales staff but doesn't match the required role
+            if ($user->hasRole('salesstaff')) {
+                return redirect()->route('dashboard');  // Redirect sales staff to dashboard
+            }
+
+            // Default fallback: Redirect unauthorized users to home
+            return redirect()->route('home')->with('error', 'Unauthorized access.');
         }
 
-        // If not authenticated, redirect to the home page
-        return redirect()->route('home');
+        // If the user is not authenticated, redirect to login
+        return redirect()->route('login')->with('error', 'Please log in to access this page.');
     }
 }

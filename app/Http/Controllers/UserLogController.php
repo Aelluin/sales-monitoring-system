@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Controllers/LogController.php
-
 namespace App\Http\Controllers;
 
 use App\Models\UserLog;
@@ -22,7 +20,13 @@ class UserLogController extends Controller
     // Display logs (for the logs page)
     public function index()
     {
-        $logs = UserLog::with('user')->latest()->paginate(10); // Fetch logs with user info
-        return view('user_logs.index', compact('logs'));  // Ensure this line is updated
+        // Ensure only admins can access the logs page
+        if (Auth::user()->hasRole('admin')) {
+            $logs = UserLog::with('user')->latest()->paginate(10); // Fetch logs with user info
+            return view('user_logs.index', compact('logs'));  // Return the logs view
+        }
+
+        // Redirect non-admin users to dashboard or another appropriate page
+        return redirect()->route('dashboard')->with('error', 'Unauthorized access to logs.');
     }
 }

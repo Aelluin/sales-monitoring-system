@@ -31,14 +31,20 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerate();
 
         // Redirect based on user role
-        if (Auth::user()->role === 'admin' || Auth::user()->role === 'salesstaff') {
-            // Admin and Salesstaff are redirected to the dashboard
+        $user = Auth::user();
+
+        if ($user->role === 'admin') {
+            // Admins should be redirected to the dashboard directly
             return redirect()->route('dashboard');
-        } else {
-            // Non-admin, non-salesstaff users go to home
+        } elseif ($user->role === 'salesstaff') {
+            // Sales staff should be redirected to the home page
             return redirect()->route('home');
         }
+
+        // Default for other users, redirect them to the home page
+        return redirect()->route('home');
     }
+
 
     /**
      * Destroy an authenticated session.

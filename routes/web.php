@@ -168,36 +168,27 @@ Route::middleware(['auth', 'verified', RoleMiddleware::class . ':salesstaff'])->
     });
 });
 
-// Prevent admins from accessing the home route and redirect them to dashboard.
-// Sales staff will always have access to the home route.
 Route::get('/home', function () {
-    // Check if the user is authenticated
-    if (auth()->user()) {
-        // Check if the user has the 'admin' role
-        if (auth()->user()->hasRole('admin')) {
-            // Admins are redirected to the dashboard
-            return redirect()->route('dashboard');
-        } elseif (auth()->user()->hasRole('salesstaff')) {
-            // Sales staff can always go to the home page
-            return app(HomeController::class)->index();
+    $user = auth()->user();
+
+    if ($user) {
+        if ($user->hasRole('admin')) {
+            return app(SalesController::class)->dashboard();  // Admin should access home directly
+        }
+
+        if ($user->hasRole('salesstaff')) {
+            return redirect()->route('dashboard');  // Sales staff redirected to dashboard
         }
     }
 
-    // Default action: for other users, show the home page
     return app(HomeController::class)->index();
 })->name('home');
 
-// Admin users can access logs
 Route::middleware(['auth', 'verified', RoleMiddleware::class . ':admin'])->group(function () {
+    // User logs route (admin only)
     Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
 });
 
-// Sales staff get redirected if they try to access logs
-Route::middleware(['auth', 'verified', RoleMiddleware::class . ':salesstaff'])->group(function () {
-    Route::get('/logs', function () {
-        return redirect()->route('dashboard');
-    });
-});
 
 // Include authentication routes
 require __DIR__ . '/auth.php';
