@@ -1,33 +1,275 @@
-<tbody>
-    @foreach($users as $user)
-        <tr>
-            <td>{{ $user->name }}</td>
-            <td>{{ $user->email }}</td>
-            <td>
-                @php
-                    $role = $user->roles->first();  // Get the first role assigned to the user
-                @endphp
+<!DOCTYPE html>
+<html lang="en">
 
-                {{ $role ? $role->name : 'No Role Assigned' }}
-            </td>
-            <td>
-                <!-- Role Assignment Form -->
-                <form action="{{ route('admin.users.assignRole', $user->id) }}" method="POST">
-                    @csrf
-                    <div class="form-group">
-                        <select name="role_id" class="form-control">
-                            <option value="">Select Role</option>
-                            @foreach($roles as $roleOption)
-                                <option value="{{ $roleOption->id }}"
-                                    {{ isset($role) && $roleOption->id === $role->id ? 'selected' : '' }}>
-                                    {{ $roleOption->name }}
-                                </option>
-                            @endforeach
-                        </select>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <title>Create Sales</title>
+    <style>
+        /* General Styling for Success and Error Messages */
+        .success,
+        .error {
+            padding: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .success {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .error {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        /* General Styles */
+        body {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        header {
+            background-color: #f8f8f8;
+            color: #333333;
+        }
+
+        /* Form Styling */
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Action Button Styling */
+        .create-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #27ae60;
+            color: white;
+            text-align: center;
+            border-radius: 4px;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .create-button:hover {
+            background-color: #219150;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 10px;
+            text-decoration: none;
+            padding: 10px 20px;
+            background-color: #3498db;
+            color: white;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .back-link:hover {
+            background-color: #2980b9;
+        }
+
+        /* Enhanced Table Styling */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: white;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .badge-success {
+            background-color: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 16px; /* Larger font size */
+        }
+
+        .badge-secondary {
+            background-color: #b2bec3;
+            color: #2d3436;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 16px; /* Larger font size */
+        }
+
+        .header-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 font-sans">
+
+    <x-app-layout>
+        <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
+            <!-- Sidebar -->
+            <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
+                style="background-color: #15151D; color: #ffffff;">
+                <div class="flex items-center justify-between p-4 border-b border-blue-700">
+                    <div class="flex justify-center w-full">
+                        <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard"
+                            class="h-14 w-50 object-contain mx-auto" />
                     </div>
-                    <button type="submit" class="btn btn-primary">Assign/Update Role</button>
-                </form>
-            </td>
-        </tr>
-    @endforeach
-</tbody>
+                    <button @click="sidebarOpen = !sidebarOpen" class="text-gray-400 hover:text-white focus:outline-none">
+                        <span class="material-icons text-2xl">menu</span>
+                    </button>
+                </div>
+
+                <nav class="flex-1 mt-4 space-y-2 px-2">
+                    <a href="/dashboard"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">dashboard</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Dashboard</span>
+                    </a>
+                    <a href="/products"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">inventory</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Products</span>
+                    </a>
+                    <a href="/sales"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">show_chart</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
+                    </a>
+
+                    <!-- Collapsible Report Menu -->
+                    <div x-data="{ dropdownOpen: false }" class="relative">
+                        <a @click="dropdownOpen = !dropdownOpen" href="#"
+                            class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
+                            <span class="material-icons mr-4 text-xl">assessment</span>
+                            <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
+                            <span class="material-icons ml-auto">arrow_drop_down</span>
+                        </a>
+                        <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false"
+                            class="pl-12 mt-2 space-y-2">
+                            <a href="/sales/daily"
+                                class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
+                                <span class="material-icons mr-2">event</span> Daily Sales
+                            </a>
+                            <a href="/sales/weekly"
+                                class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
+                                <span class="material-icons mr-2">calendar_view_week</span> Weekly Sales
+                            </a>
+                            <a href="/sales/monthly"
+                                class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200">
+                                <span class="material-icons mr-2">date_range</span> Monthly Sales
+                            </a>
+                        </div>
+                    </div>
+<!-- Logs Button -->
+<a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
+:class="{'logs-button-open': dropdownOpen}">
+<span class="material-icons mr-4 text-xl">history</span>
+<span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
+</a>
+                    <!-- User Management Button -->
+                    <a href="/admin/users"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">people</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">User Management</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Main Content -->
+            <div class="card-body p-6">
+                <h1 class="header-text">User Role Management</h1> <!-- Header Added -->
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Assign Role</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                        <tr>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td>
+                                @php
+                                $role = $user->roles->first(); // Get the first role assigned to the user
+                                @endphp
+                                <span class="{{ $role ? 'badge-success' : 'badge-secondary' }}">
+                                    {{ $role ? $role->name : 'No Role Assigned' }}
+                                </span>
+                            </td>
+                            <td>
+                                <form action="{{ route('admin.users.assignRole', $user->id) }}" method="POST"
+                                    class="flex items-center space-x-3">
+                                    @csrf
+                                    <select name="role_id" class="form-select border-2 rounded-lg py-2 px-3 text-gray-700">
+                                        <option value="">Select Role</option>
+                                        @foreach($roles as $roleOption)
+                                        <option value="{{ $roleOption->id }}"
+                                            {{ isset($role) && $roleOption->id === $role->id ? 'selected' : '' }}>
+                                            {{ $roleOption->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit"
+                                        class="btn btn-primary btn-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">Assign/Update</button>
+                                </form>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </x-app-layout>
+</body>
+
+</html>

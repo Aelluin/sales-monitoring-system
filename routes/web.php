@@ -193,7 +193,7 @@ Route::middleware(['auth', 'verified', RoleMiddleware::class . ':admin'])->group
 Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
 
 Route::post('/admin/users/{user}/assign-role', [UserController::class, 'assignRole'])->name('admin.users.assignRole');
-
+Route::post('/assign-role/{user}', [UserController::class, 'assignRole'])->name('assign.role');
 
 // Include authentication routes
 require __DIR__ . '/auth.php';

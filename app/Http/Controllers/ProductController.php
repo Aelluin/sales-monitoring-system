@@ -67,22 +67,21 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        // Validate the request data
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'quantity' => 'required|integer',
-            'description' => 'nullable|string',
-        ]);
+    public function update(Request $request, $id)
+{
+    $product = Product::findOrFail($id);
 
-        $product = Product::findOrFail($id); // Find the product by ID
-        $product->update($request->all()); // Update the product with the request data
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'price' => 'required|numeric|min:0',
+        'description' => 'nullable|string',
+    ]);
 
-        // Redirect to the products index page with a success message
-        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
-    }
+    $product->update($validated);
+
+    return redirect()->route('products.index')->with('success', 'Product updated successfully!');
+}
+
 
     /**
      * Remove the specified resource from storage.

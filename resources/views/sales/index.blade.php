@@ -331,6 +331,12 @@
                         <span class="material-icons mr-4 text-xl">history</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
                     </a>
+                    <!-- User Management Button -->
+                    <a href="/admin/users"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">people</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">User Management</span>
+                    </a>
                 </nav>
             </div>
 
