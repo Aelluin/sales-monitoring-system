@@ -8,23 +8,29 @@ use Illuminate\Http\Request;
 class UserRoleController extends Controller
 {
     public function index()
-    {
-        // Get all users, no need to fetch roles anymore
-        $users = User::all();
+{
+    // Eager load the roles relationship
+    $users = User::with('roles')->get();
 
-        return view('role.index', compact('users'));
-    }
+    // Fetch all roles available in the system
+    $roles = Role::all();
 
-    public function assignRole(Request $request, User $user)
+    return view('role.index', compact('users', 'roles'));
+}
+
+
+public function assignRole(Request $request, User $user)
 {
     $request->validate([
-        'role' => 'required|string',
+        'role_id' => 'required|exists:roles,id',
     ]);
 
-    $user->role = $request->role;
-    $user->save();
+    // Replace the user's current roles with the new one
+    $user->roles()->sync([$request->role_id]);
 
-    return redirect()->route('role.index')->with('success', 'Role assigned successfully.');
+    return redirect()->back()->with('success', 'Role assigned successfully!');
 }
+
+
 }
 

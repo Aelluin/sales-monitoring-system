@@ -29,22 +29,21 @@ class UserController extends Controller
     // Assign a role to a user
     public function assignRole(Request $request, User $user)
     {
-        // Check if the logged-in user has the 'admin' role
-        if (!Auth::user()->hasRole('admin')) {
-            // If not, redirect or return an unauthorized response
-            return redirect()->route('home')->with('error', 'You do not have permission to perform this action.');
-        }
-
-        // Validate the incoming role ID
+        // Validate the incoming role
         $validated = $request->validate([
-            'role' => 'required|exists:roles,id', // Ensure the role exists
+            'role_id' => 'required|exists:roles,id',
         ]);
 
-        // Assign the selected role to the user
-        $role = Role::findOrFail($validated['role']);
-        $user->assignRole($role);
+        // Get the role that should be assigned
+        $role = Role::find($validated['role_id']);
 
-        // Redirect back with a success message
-        return redirect()->route('admin.users.index')->with('success', 'Role assigned successfully!');
+        // Detach the user's current role (remove previous role)
+        $user->roles()->detach();
+
+        // Assign the new role to the user
+        $user->roles()->attach($role);
+
+        return redirect()->back()->with('success', 'Role updated successfully!');
     }
+
 }
