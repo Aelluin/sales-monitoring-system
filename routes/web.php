@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserLogController;
 use App\Models\Sale;
 use App\Models\Product;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Http\Middleware\RoleMiddleware;
@@ -188,6 +189,10 @@ Route::middleware(['auth', 'verified', RoleMiddleware::class . ':admin'])->group
     // User logs route (admin only)
     Route::get('/logs', [UserLogController::class, 'index'])->name('logs.index');
 });
+
+Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
+
+Route::post('/admin/users/{user}/assign-role', [UserController::class, 'assignRole'])->name('admin.users.assignRole');
 
 
 // Include authentication routes
