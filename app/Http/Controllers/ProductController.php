@@ -14,6 +14,9 @@ class ProductController extends Controller
     {
         // Get all products from the database
         $products = Product::all();
+ // Fetch products with pagination, 10 products per page
+ $products = Product::paginate(10);
+
 
         // Pass the products to the view
         return view('products.index', compact('products'));
