@@ -203,6 +203,23 @@
                                         <option value="low_stock_first">Low Stock First</option>
                                     </select>
                                 </div>
+                                <div class="mb-4">
+                                    <label for="search" class="block text-sm text-gray-700 mb-2">Search Products:</label>
+                                    <div class="flex">
+                                        <input
+                                            type="text"
+                                            id="search"
+                                            placeholder="Enter product name..."
+                                            class="p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                        />
+                                        <button
+                                            class="ml-2 px-4 py-2 bg-blue-500 text-white rounded focus:outline-none hover:bg-blue-600 transition-colors duration-200"
+                                            onclick="searchProducts()">
+                                            Search
+                                        </button>
+                                    </div>
+                                </div>
+
 
                               <!-- Table -->
 <table>
@@ -310,6 +327,21 @@
 
     window.onload = function() {
         sortProducts();
+    }
+    function searchProducts() {
+        const searchInput = document.getElementById('search').value.toLowerCase();
+        const table = document.querySelector('table tbody');
+        const rows = table.getElementsByTagName('tr');
+
+        for (let row of rows) {
+            const cells = row.getElementsByTagName('td');
+            const productName = cells[0]?.textContent.toLowerCase(); // Assumes product name is in the first column
+            if (productName && productName.includes(searchInput)) {
+                row.style.display = ''; // Show the row
+            } else {
+                row.style.display = 'none'; // Hide the row
+            }
+        }
     }
 </script>
 </body>
