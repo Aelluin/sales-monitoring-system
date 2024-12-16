@@ -128,7 +128,7 @@
             color: white;
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 16px; /* Larger font size */
+            font-size: 16px;
         }
 
         .badge-secondary {
@@ -136,7 +136,7 @@
             color: #2d3436;
             padding: 4px 8px;
             border-radius: 4px;
-            font-size: 16px; /* Larger font size */
+            font-size: 16px;
         }
 
         .header-text {
@@ -149,9 +149,8 @@
 </head>
 
 <body class="bg-gray-100 font-sans">
-
     <x-app-layout>
-        <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
+        <div x-data="{ sidebarOpen: true, dropdownOpen: false, openCreateUserModal: false }" class="flex h-screen">
             <!-- Sidebar -->
             <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
                 style="background-color: #15151D; color: #ffffff;">
@@ -206,12 +205,12 @@
                             </a>
                         </div>
                     </div>
-<!-- Logs Button -->
-<a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
-:class="{'logs-button-open': dropdownOpen}">
-<span class="material-icons mr-4 text-xl">history</span>
-<span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
-</a>
+                    <!-- Logs Button -->
+                    <a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
+                        :class="{'logs-button-open': dropdownOpen}">
+                        <span class="material-icons mr-4 text-xl">history</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
+                    </a>
                     <!-- User Management Button -->
                     <a href="/admin/users"
                         class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
@@ -223,7 +222,55 @@
 
             <!-- Main Content -->
             <div class="card-body p-6">
-                <h1 class="header-text">User Role Management</h1> <!-- Header Added -->
+                <h1 class="header-text">User Role Management</h1>
+
+                <!-- Create Gmail/User Button -->
+                <div class="mt-6 flex justify-center">
+                    <button @click="openCreateUserModal = true" class="create-button px-6 py-3 text-lg">
+                        Create Gmail/User
+                    </button>
+                </div>
+
+                <!-- Modal for Creating Gmail/User -->
+                <div x-show="openCreateUserModal" x-transition @click.outside="openCreateUserModal = false"
+                    class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+                    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
+                        <h2 class="text-2xl font-semibold mb-4">Create Gmail/User</h2>
+                        <form action="{{ route('users.create') }}" method="POST" class="space-y-4">
+                            @csrf
+                            <div>
+                                <label for="name" class="block text-sm font-medium">Name</label>
+                                <input type="text" name="name" id="name" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter name" required />
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium">Email</label>
+                                <input type="email" name="email" id="email" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter email" required />
+                            </div>
+                            <div>
+                                <label for="password" class="block text-sm font-medium">Password</label>
+                                <input type="password" name="password" id="password" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter password" required />
+                            </div>
+                            <div>
+                                <label for="password_confirmation" class="block text-sm font-medium">Confirm Password</label>
+                                <input type="password" name="password_confirmation" id="password_confirmation" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Confirm password" required />
+                            </div>
+                            <div>
+                                <label for="role" class="block text-sm font-medium">Role</label>
+                                <select name="role" id="role" class="border border-gray-300 rounded-lg w-full py-2 px-3">
+                                    <option value="">Select Role</option>
+                                    @foreach($roles as $role)
+                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" @click="openCreateUserModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancel</button>
+                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
                 <table class="table">
                     <thead>
                         <tr>

@@ -6,6 +6,8 @@ use App\Models\User;
 use Spatie\Permission\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserController extends Controller
 {
@@ -45,5 +47,39 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'Role updated successfully!');
     }
+    public function store(Request $request)
+{
+    // Validate incoming request data
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'role' => 'required|exists:roles,id',
+        'password' => 'required|string|min:8|confirmed', // Make sure password is required and confirmed
+    ]);
+
+    // Create the user
+    $user = User::create([
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'password' => Hash::make($validated['password']), // Use the password from the request and hash it
+    ]);
+
+    // Assign the role to the user
+    $user->roles()->attach($validated['role']);
+
+    // Redirect back with a success message
+    return redirect()->back()->with('success', 'User created and role assigned successfully!');
+}
+
+    public function destroy(User $user)
+{
+    try {
+        $user->delete();
+        return back()->with('success', 'User deleted successfully.');
+    } catch (\Exception $e) {
+        return back()->with('error', 'An error occurred while deleting the user.');
+    }
+}
+
 
 }

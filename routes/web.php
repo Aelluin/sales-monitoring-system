@@ -194,5 +194,11 @@ Route::middleware(['auth', 'verified', LogAllActions::class])->group(function ()
     Route::post('/assign-role/{user}', [UserController::class, 'assignRole'])->name('assign.role');
 });
 
+Route::post('/create-user', [UserController::class, 'store'])->name('users.create');
+
+Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
+
+Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.delete');
+
 // Include authentication routes
 require __DIR__ . '/auth.php';
