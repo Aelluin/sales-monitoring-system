@@ -197,11 +197,20 @@
 
                                 <!-- Aligning the Dropdown to the Left -->
                                 <div class="mb-4 flex items-center space-x-4">
-                                    <label for="sort" class="text-sm text-gray-700">Sort by stock status:</label>
-                                    <select id="sort" class="p-2 border rounded bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 w-52" onchange="sortProducts(event)">
-                                        <option value="in_stock_first" selected>In Stock First</option>
-                                        <option value="low_stock_first">Low Stock First</option>
-                                    </select>
+                                    <form method="GET" action="{{ route('products.index') }}">
+
+                                        <!-- Stock Filter -->
+                                        <select name="stock_status">
+                                            <option value="all" {{ request('stock_status') === 'all' ? 'selected' : '' }}>All</option>
+                                            <option value="in_stock" {{ request('stock_status') === 'in_stock' ? 'selected' : '' }}>In Stock</option>
+                                            <option value="low_stock" {{ request('stock_status') === 'low_stock' ? 'selected' : '' }}>Low Stock</option>
+                                            <option value="out_of_stock" {{ request('stock_status') === 'out_of_stock' ? 'selected' : '' }}>Out of Stock</option>
+                                        </select>
+
+                                        <!-- Submit Button -->
+                                        <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded  hover:bg-blue-600 transition-colors duration-200">Filter</button>
+                                    </form>
+
                                 </div>
                                 <div class="mb-4">
                                     <label for="search" class="block text-sm text-gray-700 mb-2">Search Products:</label>
@@ -210,7 +219,7 @@
                                             type="text"
                                             id="search"
                                             placeholder="Enter product name..."
-                                            class="p-2 border rounded w-full focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                                            class="px-4 border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
                                         />
                                         <button
                                             class="ml-2 px-4 py-2 bg-blue-500 text-white rounded focus:outline-none hover:bg-blue-600 transition-colors duration-200"
@@ -241,9 +250,10 @@
                 <td class="p-2 border-b">{{ $product->quantity }}</td>
                 <td class="p-2 border-b">{{ $product->description }}</td>
                 <td class="p-2 border-b">
-                    <span class="{{ $product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400' }}">
-                        {{ $product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock' }}
-                    </span>
+                    <span class="
+                    {{ $product->quantity == 0 ? 'text-gray-500' : ($product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400') }}">
+                    {{ $product->quantity == 0 ? 'Out of Stock' : ($product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock') }}
+                </span>
                 </td>
                 <td class="p-2 border-b action-buttons">
                     <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
@@ -300,49 +310,159 @@
         </div>
     </div>
 </x-app-layout>
-
 <script>
-    function sortProducts(event) {
-        const sortOption = event ? event.target.value : 'in_stock_first';
-        const productsTable = document.querySelector('table tbody');
-        const rows = Array.from(productsTable.rows);
+   let allProducts = []; // Array to hold all products
+let currentPage = 1;
+const rowsPerPage = 10; // Number of rows per page
 
-        rows.sort((a, b) => {
-            const qtyA = parseInt(a.cells[2].textContent.trim());
-            const qtyB = parseInt(b.cells[2].textContent.trim());
+function fetchProducts() {
+    const productsTable = document.querySelector('table tbody');
+    const rows = Array.from(productsTable.rows);
 
-            if (sortOption === 'in_stock_first') {
-                return qtyB - qtyA;
-            } else {
-                return qtyA - qtyB;
-            }
-        });
+    // Populate the allProducts array with all products data
+    allProducts = rows.map(row => {
+        const qty = parseInt(row.cells[2].textContent.trim()); // Assuming stock is in the 3rd column
+        const productName = row.cells[0].textContent.trim(); // Assuming name is in the 1st column
+        return { row, qty, productName };
+    });
 
-        rows.forEach(row => productsTable.appendChild(row));
-    }
+    // Sort and filter products initially
+    sortProducts(); // Sort and display products on the first page
+}
 
-    function confirmDelete() {
-        return confirm('Are you sure you want to delete this product? This action cannot be undone.');
-    }
+function sortProducts(event) {
+    const sortOption = event ? event.target.value : 'in_stock_first'; // Default sort option
 
-    window.onload = function() {
-        sortProducts();
-    }
-    function searchProducts() {
-        const searchInput = document.getElementById('search').value.toLowerCase();
-        const table = document.querySelector('table tbody');
-        const rows = table.getElementsByTagName('tr');
+    // Sort all products based on stock status
+    allProducts.sort((a, b) => {
+        let stockStatusA = getStockStatus(a.qty);
+        let stockStatusB = getStockStatus(b.qty);
 
-        for (let row of rows) {
-            const cells = row.getElementsByTagName('td');
-            const productName = cells[0]?.textContent.toLowerCase(); // Assumes product name is in the first column
-            if (productName && productName.includes(searchInput)) {
-                row.style.display = ''; // Show the row
-            } else {
-                row.style.display = 'none'; // Hide the row
-            }
+        // Sort logic based on the selected option
+        if (sortOption === 'in_stock_first') {
+            return stockStatusB - stockStatusA; // In Stock First
+        } else if (sortOption === 'low_stock_first') {
+            return stockStatusA - stockStatusB; // Low Stock First
+        } else if (sortOption === 'out_of_stock_first') {
+            return stockStatusA - stockStatusB; // Out of Stock First (added option)
         }
+        return 0;
+    });
+
+    displayPaginatedProducts(); // Display the products after sorting
+}
+
+// Helper function to determine stock status
+function getStockStatus(quantity) {
+    if (quantity === 0) {
+        return 0; // Out of Stock
+    } else if (quantity <= 10) { // Low stock threshold
+        return 1; // Low Stock
+    } else {
+        return 2; // In Stock
     }
+}
+
+// Function to display paginated products
+function displayPaginatedProducts() {
+    const productsTable = document.querySelector('table tbody');
+
+    // Clear current table rows
+    productsTable.innerHTML = '';
+
+    // Get the rows for the current page
+    const startIndex = (currentPage - 1) * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    const pageProducts = allProducts.slice(startIndex, endIndex);
+
+    // Append the rows for the current page
+    pageProducts.forEach(product => {
+        productsTable.appendChild(product.row);
+    });
+
+    updatePaginationControls(); // Update pagination controls
+}
+
+// Function to update pagination controls based on the current page
+function updatePaginationControls() {
+    const totalPages = Math.ceil(allProducts.length / rowsPerPage);
+    const paginationControls = document.querySelector('.pagination');
+    paginationControls.innerHTML = '';
+
+    // Add previous button
+    const prevButton = document.createElement('button');
+    prevButton.textContent = 'Previous';
+    prevButton.disabled = currentPage === 1;
+    prevButton.addEventListener('click', () => changePage(currentPage - 1));
+    paginationControls.appendChild(prevButton);
+
+    // Add page number buttons
+    for (let page = 1; page <= totalPages; page++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = page;
+        pageButton.disabled = page === currentPage;
+        pageButton.addEventListener('click', () => changePage(page));
+        paginationControls.appendChild(pageButton);
+    }
+
+    // Add next button
+    const nextButton = document.createElement('button');
+    nextButton.textContent = 'Next';
+    nextButton.disabled = currentPage === totalPages;
+    nextButton.addEventListener('click', () => changePage(currentPage + 1));
+    paginationControls.appendChild(nextButton);
+}
+
+// Function to change the current page and display products for that page
+function changePage(page) {
+    currentPage = page;
+    displayPaginatedProducts();
+}
+
+// Search function for product names
+function searchProducts() {
+    const searchInput = document.getElementById('search').value.toLowerCase();
+
+    // Filter products based on search term
+    const filteredProducts = allProducts.filter(product =>
+        product.productName.toLowerCase().includes(searchInput)
+    );
+
+    // Update the table with filtered products
+    displayProducts(filteredProducts);
+}
+
+// Display filtered products
+function displayProducts(products) {
+    const productsTable = document.querySelector('table tbody');
+    productsTable.innerHTML = '';
+
+    products.forEach(product => {
+        productsTable.appendChild(product.row);
+    });
+}
+
+// Function to filter products by stock status (In Stock, Low Stock, Out of Stock)
+function filterByStock(status) {
+    let filteredProducts;
+
+    if (status === 'in_stock') {
+        filteredProducts = allProducts.filter(product => getStockStatus(product.qty) === 2);
+    } else if (status === 'low_stock') {
+        filteredProducts = allProducts.filter(product => getStockStatus(product.qty) === 1);
+    } else if (status === 'out_of_stock') {
+        filteredProducts = allProducts.filter(product => getStockStatus(product.qty) === 0);
+    }
+
+    displayProducts(filteredProducts); // Display the filtered products
+}
+
+// Initialize when page loads
+window.onload = function() {
+    fetchProducts(); // Fetch all products and set up the table
+};
+
 </script>
+
 </body>
 </html>

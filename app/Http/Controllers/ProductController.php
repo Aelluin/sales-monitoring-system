@@ -10,16 +10,36 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        // Get all products from the database
-        $products = Product::all();
- // Fetch products with pagination, 10 products per page
- $products = Product::paginate(10);
+        // Get filter parameters from the request
+        $stockStatus = $request->input('stock_status', 'all'); // Default to 'all'
+        $searchTerm = $request->input('search', '');
 
+        // Build query to filter products based on stock status
+        $query = Product::query();
 
-        // Pass the products to the view
-        return view('products.index', compact('products'));
+        // Apply stock filter
+        if ($stockStatus !== 'all') {
+            if ($stockStatus === 'in_stock') {
+                $query->where('quantity', '>', 10); // Products with stock > 10
+            } elseif ($stockStatus === 'low_stock') {
+                $query->whereBetween('quantity', [1, 10]); // Products with stock between 1 and 10
+            } elseif ($stockStatus === 'out_of_stock') {
+                $query->where('quantity', 0); // Products with 0 stock
+            }
+        }
+
+        // Apply search filter
+        if (!empty($searchTerm)) {
+            $query->where('name', 'like', '%' . $searchTerm . '%'); // Filter by product name
+        }
+
+        // Fetch filtered products with pagination (10 products per page)
+        $products = $query->paginate(10);
+
+        // Pass the products to the view with the current filter parameters
+        return view('products.index', compact('products', 'stockStatus', 'searchTerm'));
     }
 
     /**
