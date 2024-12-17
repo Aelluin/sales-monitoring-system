@@ -15,6 +15,7 @@ class ProductController extends Controller
         // Get filter parameters from the request
         $stockStatus = $request->input('stock_status', 'all'); // Default to 'all'
         $searchTerm = $request->input('search', '');
+        $sortOrder = $request->input('sort_order', 'desc'); // Add sort order parameter (default is descending)
 
         // Build query to filter products based on stock status
         $query = Product::query();
@@ -35,13 +36,15 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $searchTerm . '%'); // Filter by product name
         }
 
-        // Fetch filtered products with pagination (10 products per page)
+        // Apply sorting by quantity (either ascending or descending)
+        $query->orderBy('quantity', $sortOrder); // Sort products based on quantity field
+
+        // Fetch filtered products with pagination (9 products per page)
         $products = $query->paginate(9);
 
         // Pass the products to the view with the current filter parameters
-        return view('products.index', compact('products', 'stockStatus', 'searchTerm'));
+        return view('products.index', compact('products', 'stockStatus', 'searchTerm', 'sortOrder'));
     }
-
     /**
      * Show the form for creating a new resource.
      */

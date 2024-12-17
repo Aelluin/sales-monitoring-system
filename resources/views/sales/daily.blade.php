@@ -332,7 +332,7 @@
 
     .table td {
         background-color: #fff; /* White background for data cells */
-        color: #666;
+        color: #000000;
     }
 
     /* Hover effect for rows */
