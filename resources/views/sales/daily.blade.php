@@ -279,6 +279,87 @@
                         </button>
                     </form>
 
+                    <!-- Table structure -->
+<table class="table table-bordered">
+    <!-- Table Header -->
+    <thead>
+        <tr>
+            <th>Product Name</th>
+            <th>Quantity Sold</th>
+            <th>Total Price</th> <!-- Displaying total price -->
+            <th>Payment Method</th>
+            <th>Date of Sale</th>
+        </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+        @foreach($salesData as $sale)
+        <tr>
+            <td>{{ $sale['product']->name }}</td>  <!-- Accessing product name -->
+            <td>{{ $sale['quantity'] }}</td>  <!-- Total quantity sold -->
+            <td>₱{{ number_format($sale['total_price'], 2) }}</td>
+
+            <td>{{ $sale['payment_method'] }}</td>  <!-- Payment method -->
+            <td>{{ $sale['created_at']->format('Y-m-d') }}</td>  <!-- Date of sale -->
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<!-- Custom CSS for table design -->
+<style>
+    /* Enhancing table design */
+    .table {
+        width: 100%;
+        margin: 20px 0;
+        border-collapse: collapse;
+        font-family: Arial, sans-serif; /* Font style */
+    }
+
+    .table th,
+    .table td {
+        padding: 12px 15px;
+        text-align: left;
+        border: 1px solid #dee2e6; /* Border around table cells */
+    }
+
+    .table th {
+        background-color: #f8f9fa; /* Light gray background for headers */
+        font-weight: bold;
+        color: #333;
+    }
+
+    .table td {
+        background-color: #fff; /* White background for data cells */
+        color: #666;
+    }
+
+    /* Hover effect for rows */
+    .table tbody tr:hover {
+        background-color: #f1f1f1; /* Light gray background when hovering over rows */
+        cursor: pointer;
+    }
+
+    /* Styling for table borders */
+    .table-bordered {
+        border: 1px solid #dee2e6;
+    }
+
+    .table-bordered th,
+    .table-bordered td {
+        border: 1px solid #dee2e6;
+    }
+
+    /* Optional: add responsive behavior */
+    @media (max-width: 768px) {
+        .table th,
+        .table td {
+            padding: 8px;
+        }
+    }
+</style>
+
                     <!-- Total Revenue -->
                     <div class="highlighted-section p-4 mb-6">
                         <h3 class="text-lg text-center font-semibold text-gray-800">Total Revenue: ₱{{ number_format($totalRevenue, 2) }}</h3>

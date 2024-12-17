@@ -182,32 +182,54 @@ class SalesController extends Controller
     }
 
     public function dailyReport(Request $request)
-    {
-        $selectedDate = $request->date ?: now()->toDateString();
+{
+    // Get the selected date from the request, or default to today if none is provided
+    $selectedDate = $request->date ?: now()->toDateString();  // default to today
 
-        $dailySales = Sale::whereDate('created_at', $selectedDate)->get();
+    // Retrieve all sales for the selected date and eager load the product relationship
+    $dailySales = Sale::with('product')->whereDate('created_at', $selectedDate)->get();
 
-        $totalRevenue = $dailySales->sum('total_price');
+    // Calculate the total revenue for the day (use total_price directly)
+    $totalRevenue = $dailySales->sum('total_price');  // Sum the total_price for each sale
 
-        $salesData = $dailySales->groupBy('product_id')->map(function ($group) {
-            return [
-                'name' => $group->first()->product->name,
-                'quantity' => $group->sum('quantity'),
-            ];
-        });
+    // Group sales by product and calculate the total quantity sold per product
+    $salesData = $dailySales->groupBy('product_id')->map(function ($group) {
+        // Eager loaded product relationship is used here
+        return [
+            'product' => $group->first()->product,  // Eager loaded product
+            'quantity' => $group->sum('quantity'),  // Total quantity sold
+           'total_price' => $group->sum('total_price'), // This should give you a sum of total_price
+            'payment_method' => $group->first()->payment_method,  // Access payment method from first sale in the group
+            'created_at' => $group->first()->created_at,  // Access created_at from first sale in the group
+        ];
+    });
 
-        $productNames = $salesData->pluck('name')->toArray();
-        $salesQuantities = $salesData->pluck('quantity')->toArray();
+    // Prepare data for the chart: product names and quantities sold
+    $productNames = $salesData->pluck('product.name')->toArray();
+    $salesQuantities = $salesData->pluck('quantity')->toArray();
 
-        $paymentMethods = $dailySales->groupBy('payment_method')->map(function ($group) {
-            return $group->count();
-        });
+    // Group sales by payment method and count the occurrences
+    $paymentMethods = $dailySales->groupBy('payment_method')->map(function ($group) {
+        return $group->count();  // Count sales per payment method
+    });
 
-        $paymentLabels = $paymentMethods->keys()->toArray();
-        $paymentCounts = $paymentMethods->values()->toArray();
+    // Prepare payment methods and counts for chart
+    $paymentLabels = $paymentMethods->keys()->toArray();
+    $paymentCounts = $paymentMethods->values()->toArray();
 
-        return view('sales.daily', compact('totalRevenue', 'salesData', 'productNames', 'salesQuantities', 'selectedDate', 'paymentLabels', 'paymentCounts'));
-    }
+    $totalSales = $dailySales->sum('quantity');  // Total quantity sold for the day
+
+    // Pass the data to the view
+    return view('sales.daily', compact(
+        'totalRevenue',   // Total revenue for the day
+        'salesData',      // Sales data (product name and quantity sold)
+        'productNames',   // For the chart: product names
+        'salesQuantities',// For the chart: quantities sold
+        'selectedDate',   // The selected date for the report
+        'paymentLabels',  // Payment method labels for the chart
+        'paymentCounts'   // Payment method counts for the chart
+    ));
+}
 
     // Show weekly form
     public function showWeeklyForm(Request $request)
