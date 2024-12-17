@@ -117,34 +117,79 @@
 </head>
 <body>
 <x-app-layout>
-    <div class="flex h-screen font-sans">
-        <div x-data="{ open: true }" :class="open ? 'w-64' : 'w-20'" class="flex flex-col h-full" style="background-color: #15151D; color: #ffffff;">
+    <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
+        <!-- Sidebar -->
+        <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
+            style="background-color: #15151D; color: #ffffff;">
             <div class="flex items-center justify-between p-4 border-b border-blue-700">
                 <div class="flex justify-center w-full">
-                    <img x-show="open" src="{{ asset('img/gg.png') }}" alt="My Dashboard" class="h-14 w-50 object-contain mx-auto" />
+                    <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard"
+                        class="h-14 w-50 object-contain mx-auto" />
                 </div>
-                <button @click="open = !open" class="text-gray-400 hover:text-white focus:outline-none">
+                <button @click="sidebarOpen = !sidebarOpen" class="text-gray-400 hover:text-white focus:outline-none">
                     <span class="material-icons text-2xl">menu</span>
                 </button>
             </div>
 
             <nav class="flex-1 mt-4 space-y-2 px-2">
-                <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">dashboard</span>
-                    <span x-show="open" class="flex-1 text-base">Dashboard</span>
-                </a>
-                <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg bg-blue-700 text-white transition-all duration-200">
+                <a href="/dashboard"
+                class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                :class="{'bg-blue-700 text-white': window.location.pathname == '/dashboard', 'active': window.location.pathname == '/dashboard'}">
+                 <span class="material-icons mr-4 text-xl">dashboard</span>
+                 <span x-show="sidebarOpen" class="flex-1 text-base">Dashboard</span>
+             </a>
+                <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                :class="{'bg-blue-700 text-white': window.location.pathname == '/products', 'active': window.location.pathname == '/products'}">
                     <span class="material-icons mr-4 text-xl">inventory</span>
-                    <span x-show="open" class="flex-1 text-base">Products</span>
+                    <span x-show="sidebarOpen" class="flex-1 text-base">Products</span>
                 </a>
-                <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                <a href="/sales" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                    :class="{'active': window.location.pathname == '/sales'}">
                     <span class="material-icons mr-4 text-xl">show_chart</span>
-                    <span x-show="open" class="flex-1 text-base">Sales</span>
+                    <span x-show="sidebarOpen" class="flex-1 text-base">Sales</span>
                 </a>
-                <a href="/sales/report" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
-                    <span class="material-icons mr-4 text-xl">assessment</span>
-                    <span x-show="open" class="flex-1 text-base">Report</span>
+
+                <!-- Collapsible Report Menu -->
+                <div x-data="{ dropdownOpen: false }" class="relative">
+                    <a @click="dropdownOpen = !dropdownOpen" href="#" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">assessment</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">Report</span>
+                        <span class="material-icons ml-auto">arrow_drop_down</span>
+                    </a>
+                    <div x-show="dropdownOpen" x-transition @click.outside="dropdownOpen = false" class="pl-12 mt-2 space-y-2">
+                        <!-- Daily Sales -->
+                        <a href="/sales/daily" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                            :class="{'active': window.location.pathname == '/sales/daily'}">
+                            <span class="material-icons mr-2">event</span>
+                            Daily Sales
+                        </a>
+                        <!-- Weekly Sales -->
+                        <a href="/sales/weekly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                            :class="{'active': window.location.pathname == '/sales/weekly'}">
+                            <span class="material-icons mr-2">calendar_view_week</span>
+                            Weekly Sales
+                        </a>
+                        <!-- Monthly Sales -->
+                        <a href="/sales/monthly" class="flex items-center py-2 px-4 text-sm rounded-md text-gray-200 hover:bg-blue-600 transition-all duration-200"
+                            :class="{'active': window.location.pathname == '/sales/monthly'}">
+                            <span class="material-icons mr-2">date_range</span>
+                            Monthly Sales
+                        </a>
+                    </div>
+                </div>
+                @if(Auth::user() && Auth::user()->hasRole('admin'))
+                <!-- Logs Button -->
+                <a href="/logs" class="flex items-center py-3 px-4 rounded-md text-lg text-white hover:bg-blue-700 transition-all duration-200 logs-button"
+                    :class="{'logs-button-open': dropdownOpen}">
+                    <span class="material-icons mr-4 text-xl">history</span>
+                    <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
                 </a>
+                <a href="/admin/users"
+                    class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                    <span class="material-icons mr-4 text-xl">people</span>
+                    <span x-show="sidebarOpen" class="flex-1 text-base">User Management</span>
+                </a>
+                @endif
             </nav>
         </div>
 
