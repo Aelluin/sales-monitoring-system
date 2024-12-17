@@ -15,7 +15,8 @@ class ProductController extends Controller
         // Get filter parameters from the request
         $stockStatus = $request->input('stock_status', 'all'); // Default to 'all'
         $searchTerm = $request->input('search', '');
-        $sortOrder = $request->input('sort_order', 'desc'); // Add sort order parameter (default is descending)
+        $sortOrder = $request->input('sort_order', 'desc'); // Default is descending
+        $archivedStatus = $request->input('archived_status', 'all'); // Optionally filter by archived status
 
         // Build query to filter products based on stock status
         $query = Product::query();
@@ -31,20 +32,26 @@ class ProductController extends Controller
             }
         }
 
+        // Apply archived filter (if any)
+        if ($archivedStatus !== 'all') {
+            $query->where('archived', $archivedStatus === 'archived' ? true : false); // Show archived or active products
+        }
+
         // Apply search filter
         if (!empty($searchTerm)) {
             $query->where('name', 'like', '%' . $searchTerm . '%'); // Filter by product name
         }
 
         // Apply sorting by quantity (either ascending or descending)
-        $query->orderBy('quantity', $sortOrder); // Sort products based on quantity field
+        $query->orderBy('quantity', $sortOrder);
 
         // Fetch filtered products with pagination (9 products per page)
         $products = $query->paginate(9);
 
         // Pass the products to the view with the current filter parameters
-        return view('products.index', compact('products', 'stockStatus', 'searchTerm', 'sortOrder'));
+        return view('products.index', compact('products', 'stockStatus', 'searchTerm', 'sortOrder', 'archivedStatus'));
     }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -113,13 +120,17 @@ class ProductController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
-    {
-        $product = Product::findOrFail($id); // Find the product by ID
-        $product->delete(); // Delete the product
+{
+    // Find the product by ID
+    $product = Product::findOrFail($id);
 
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully!'); // Redirect with success message
-    }
-    public function addStock(Request $request, Product $product)
+    // Mark the product as archived (instead of deleting it)
+    $product->archived = true;  // Set 'archived' to true
+    $product->save();  // Save the changes
+
+    // Redirect back with a success message
+    return redirect()->route('products.index')->with('success', 'Product archived successfully!');
+}    public function addStock(Request $request, Product $product)
     {
         // Validate the quantity input
         $request->validate([
@@ -133,4 +144,21 @@ class ProductController extends Controller
         // Redirect back with a success message
         return redirect()->route('products.index')->with('success', 'Stock added successfully!');
     }
+    public function archived() {
+        // Fetch all archived products without pagination
+        $archivedProducts = Product::where('archived', true)->get(); // Use `get()` instead of `paginate()`
+
+        return view('products.archived', compact('archivedProducts'));
+    }
+
+    public function unarchive($id) {
+        // Find the product and unarchive it
+        $product = Product::findOrFail($id);
+        $product->archived = false;
+        $product->save();
+
+        // Redirect back with a success message
+        return redirect()->route('products.archived')->with('success', 'Product unarchived successfully!');
+    }
+
 }

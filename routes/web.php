@@ -208,5 +208,12 @@ Route::delete('/users/{user}', [UserRoleController::class, 'delete'])->name('use
 Route::get('/roles', [UserRoleController::class, 'index'])->name('role.index');
 
 
+
+// Unarchive a product
+Route::post('products/{id}/unarchive', [ProductController::class, 'unarchive'])->name('products.unarchive');
+
+// Add this route to make "archived" accessible at /archived
+Route::get('/archived', [ProductController::class, 'archived'])->name('products.archived');
+
 // Include authentication routes
 require __DIR__ . '/auth.php';

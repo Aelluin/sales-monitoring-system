@@ -275,7 +275,7 @@
                                 </div>
 
 
-                              <!-- Table -->
+ <!-- Active Products Table -->
 <table>
     <thead>
         <tr>
@@ -289,53 +289,63 @@
     </thead>
     <tbody>
         @foreach($products as $product)
-            <tr>
-                <td class="p-2 border-b">{{ $product->name }}</td>
-                <td class="p-2 border-b">₱{{ number_format($product->price, 2) }}</td>
-                <td class="p-2 border-b">{{ $product->quantity }}</td>
-                <td class="p-2 border-b">{{ $product->description }}</td>
-                <td class="p-2 border-b">
-                    <span class="
-                    {{ $product->quantity == 0 ? 'text-gray-500' : ($product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400') }}">
-                    {{ $product->quantity == 0 ? 'Out of Stock' : ($product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock') }}
-                </span>
-                </td>
-                <td class="p-2 border-b action-buttons">
-                    <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
-                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="delete-button">Delete</button>
-                    </form>
+            @if(!$product->archived) <!-- Only show active products -->
+                <tr>
+                    <td class="p-2 border-b">{{ $product->name }}</td>
+                    <td class="p-2 border-b">₱{{ number_format($product->price, 2) }}</td>
+                    <td class="p-2 border-b">{{ $product->quantity }}</td>
+                    <td class="p-2 border-b">{{ $product->description }}</td>
+                    <td class="p-2 border-b">
+                        <span class="
+                        {{ $product->quantity == 0 ? 'text-gray-500' : ($product->quantity <= $product->low_stock_threshold ? 'text-red-400' : 'text-green-400') }}">
+                        {{ $product->quantity == 0 ? 'Out of Stock' : ($product->quantity <= $product->low_stock_threshold ? 'Low Stock' : 'In Stock') }}
+                        </span>
+                    </td>
+                    <td class="p-2 border-b action-buttons">
+                        <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
 
+                        <!-- Archive Button -->
+                        <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to archive this product?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="archive-button text-yellow-500 hover:text-yellow-700">
+                                Archive
+                            </button>
+                        </form>
 
-                    <div x-data="{ openAddStockModal: false }">
                         <!-- Add Stock Button -->
-                        <button @click="openAddStockModal = true" class="add-stock-button bg-green-500 hover:bg-green-400 text-white py-2 px-4 rounded">
-                            Add Stock
-                        </button>
-
-                        <!-- Add Stock Modal -->
-                        <div x-show="openAddStockModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center" @click.away="openAddStockModal = false">
-                            <div class="bg-white p-6 rounded-lg w-80">
-                                <h3 class="text-xl mb-4">Add Stock to {{ $product->name }}</h3>
-                                <form action="{{ route('products.addStock', $product->id) }}" method="POST">
-                                    @csrf
-                                    <label for="quantity" class="block mb-2">Enter Quantity to Add</label>
-                                    <input type="number" id="quantity" name="quantity" class="border p-2 w-full mb-4" required />
-                                    <div class="flex justify-end">
-                                        <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded mr-2">Add</button>
-                                        <button type="button" @click="openAddStockModal = false" class="bg-red-500 text-white py-2 px-4 rounded">Cancel</button>
-                                    </div>
-                                </form>
+                        <div x-data="{ openAddStockModal: false }">
+                            <button @click="openAddStockModal = true" class="add-stock-button bg-green-500 hover:bg-green-400 text-white py-2 px-4 rounded">
+                                Add Stock
+                            </button>
+                            <!-- Add Stock Modal -->
+                            <div x-show="openAddStockModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center" @click.away="openAddStockModal = false">
+                                <div class="bg-white p-6 rounded-lg w-80">
+                                    <h3 class="text-xl mb-4">Add Stock to {{ $product->name }}</h3>
+                                    <form action="{{ route('products.addStock', $product->id) }}" method="POST">
+                                        @csrf
+                                        <label for="quantity" class="block mb-2">Enter Quantity to Add</label>
+                                        <input type="number" id="quantity" name="quantity" class="border p-2 w-full mb-4" required />
+                                        <div class="flex justify-end">
+                                            <button type="submit" class="bg-green-500 text-white py-2 px-4 rounded mr-2">Add</button>
+                                            <button type="button" @click="openAddStockModal = false" class="bg-red-500 text-white py-2 px-4 rounded">Cancel</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </td>
-            </tr>
+                    </td>
+                </tr>
+            @endif
         @endforeach
     </tbody>
 </table>
+
+<!-- Button to go to Archived Products Page -->
+<div class="mt-4">
+    <a href="{{ route('products.archived') }}" class="bg-gray-500 text-white py-2 px-4 rounded">View Archived Products</a>
+</div>
+
 
 <!-- Pagination (Placed after the table) -->
 <div class="mt-4">
