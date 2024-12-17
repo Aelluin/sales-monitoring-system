@@ -127,7 +127,6 @@
                     <th>Customer Email</th>
                     <th>Customer Address</th>
                     <th>Added By</th>
-                    <th>User Email</th>
                     <th>Date</th>
                 </tr>
             </thead>
@@ -142,7 +141,6 @@
                         <td>{{ $sale->customer_email }}</td>
                         <td>{{ $sale->customer_address }}</td>
                         <td>{{ optional($sale->user)->name ?? 'No user' }}</td>
-                        <td>{{ optional($sale->user)->email ?? 'No email' }}</td>
                         <td>{{ $sale->created_at->format('F j, Y, g:i A') }}</td>
                     </tr>
                 @endforeach

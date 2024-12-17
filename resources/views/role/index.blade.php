@@ -98,19 +98,20 @@
 
         /* Enhanced Table Styling */
         .table {
-            width: 100%;
+            width: 90%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: 20px auto;
             background-color: white;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             overflow: hidden;
+
         }
 
         .table th,
         .table td {
             text-align: left;
-            padding: 12px 16px;
+            padding: 8px 16px;
             border-bottom: 1px solid #eaeaea;
         }
 
@@ -221,8 +222,21 @@
             </div>
 
             <!-- Main Content -->
-            <div class="card-body p-6">
+            <div class="flex-1 p-6">
                 <h1 class="header-text">User Role Management</h1>
+
+                <!-- Display Success/Error Messages -->
+                <div class="message-area">
+                    @if(session('success'))
+                        <div class="success">
+                            {{ session('success') }}
+                        </div>
+                    @elseif(session('error'))
+                        <div class="error">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+                </div>
 
                 <!-- Create Gmail/User Button -->
                 <div class="mt-6 flex justify-center">
@@ -287,7 +301,7 @@
                             <td>{{ $user->email }}</td>
                             <td>
                                 @php
-                                $role = $user->roles->first(); // Get the first role assigned to the user
+                                $role = $user->roles->first();
                                 @endphp
                                 <span class="{{ $role ? 'badge-success' : 'badge-secondary' }}">
                                     {{ $role ? $role->name : 'No Role Assigned' }}
@@ -314,9 +328,11 @@
                         @endforeach
                     </tbody>
                 </table>
+
             </div>
         </div>
     </x-app-layout>
 </body>
+
 
 </html>

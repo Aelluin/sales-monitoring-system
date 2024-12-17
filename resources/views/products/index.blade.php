@@ -257,11 +257,12 @@
                 </td>
                 <td class="p-2 border-b action-buttons">
                     <a href="{{ route('products.edit', $product->id) }}" class="edit-button">Edit</a>
-                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirmDelete();">
+                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this product?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="delete-button">Delete</button>
                     </form>
+
 
                     <div x-data="{ openAddStockModal: false }">
                         <!-- Add Stock Button -->

@@ -171,39 +171,39 @@
                     </div>
                 </header>
 
-                <!-- Select Year and Month Moved to Top -->
-                <div class="flex justify-between mb-6 px-6">
-                    <form method="GET" action="{{ route('sales.monthly') }}" class="flex space-x-4 w-full max-w-4xl">
-                        <div class="flex-1">
-                            <label for="year" class="block text-sm font-medium">Select Year:</label>
-                            <select name="year" id="year" class="w-full border-gray-300 rounded-md">
-                                @foreach ($years as $yearOption)
-                                    <option value="{{ $yearOption }}" {{ $yearOption == $year ? 'selected' : '' }}>{{ $yearOption }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="flex-1">
-                            <label for="month" class="block text-sm font-medium">Select Month:</label>
-                            <select name="month" id="month" class="w-full border-gray-300 rounded-md">
-                                <option value="01" {{ $month == '01' ? 'selected' : '' }}>January</option>
-                                <option value="02" {{ $month == '02' ? 'selected' : '' }}>February</option>
-                                <option value="03" {{ $month == '03' ? 'selected' : '' }}>March</option>
-                                <option value="04" {{ $month == '04' ? 'selected' : '' }}>April</option>
-                                <option value="05" {{ $month == '05' ? 'selected' : '' }}>May</option>
-                                <option value="06" {{ $month == '06' ? 'selected' : '' }}>June</option>
-                                <option value="07" {{ $month == '07' ? 'selected' : '' }}>July</option>
-                                <option value="08" {{ $month == '08' ? 'selected' : '' }}>August</option>
-                                <option value="09" {{ $month == '09' ? 'selected' : '' }}>September</option>
-                                <option value="10" {{ $month == '10' ? 'selected' : '' }}>October</option>
-                                <option value="11" {{ $month == '11' ? 'selected' : '' }}>November</option>
-                                <option value="12" {{ $month == '12' ? 'selected' : '' }}>December</option>
-                            </select>
-                        </div>
-                        <div>
-                            <button type="submit" class="w-full bg-blue-500 text-white py-2 px-4 rounded-md">Get Report</button>
-                        </div>
-                    </form>
-                </div>
+               <!-- Select Year and Month Moved to Top -->
+<div class="flex justify-between mb-6 px-6">
+    <form method="GET" action="{{ route('sales.monthly') }}" class="flex items-end space-x-4 w-full max-w-4xl">
+        <div class="flex-1">
+            <label for="year" class="block text-sm font-medium">Select Year:</label>
+            <select name="year" id="year" class="w-full border-gray-300 rounded-md">
+                @foreach ($years as $yearOption)
+                    <option value="{{ $yearOption }}" {{ $yearOption == $year ? 'selected' : '' }}>{{ $yearOption }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="flex-1">
+            <label for="month" class="block text-sm font-medium">Select Month:</label>
+            <select name="month" id="month" class="w-full border-gray-300 rounded-md">
+                <option value="01" {{ $month == '01' ? 'selected' : '' }}>January</option>
+                <option value="02" {{ $month == '02' ? 'selected' : '' }}>February</option>
+                <option value="03" {{ $month == '03' ? 'selected' : '' }}>March</option>
+                <option value="04" {{ $month == '04' ? 'selected' : '' }}>April</option>
+                <option value="05" {{ $month == '05' ? 'selected' : '' }}>May</option>
+                <option value="06" {{ $month == '06' ? 'selected' : '' }}>June</option>
+                <option value="07" {{ $month == '07' ? 'selected' : '' }}>July</option>
+                <option value="08" {{ $month == '08' ? 'selected' : '' }}>August</option>
+                <option value="09" {{ $month == '09' ? 'selected' : '' }}>September</option>
+                <option value="10" {{ $month == '10' ? 'selected' : '' }}>October</option>
+                <option value="11" {{ $month == '11' ? 'selected' : '' }}>November</option>
+                <option value="12" {{ $month == '12' ? 'selected' : '' }}>December</option>
+            </select>
+        </div>
+        <div class="flex-shrink-0">
+            <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded-md">Get Report</button>
+        </div>
+    </form>
+</div>
 
                 <!-- Main Report Section -->
                 <main class="flex-1 p-6 space-y-6 content-card">
@@ -236,17 +236,24 @@
                                 </tbody>
                             </table>
                         </div>
-
+       <!-- Summary of Sales -->
+       <div class="flex items-center justify-center">
+        <div class="bg-white shadow-md rounded-lg p-6 max-w-sm text-center">
+            <footer>
+                <p class="text-lg  mb-2">
+                    <strong>Total Sales:</strong> ₱{{ number_format($totalSales, 2) }}
+                </p>
+                <p class="text-lg">
+                    <strong>Total Quantity Sold:</strong> {{ $totalQuantity }}
+                </p>
+            </footer>
+        </div>
+    </div>
                         <!-- Pagination Links -->
-                        <div class="mt-4">
+                        <div class="mt-4 ">
                             {{ $monthlySales->links() }}
                         </div>
 
-                        <!-- Summary of sales -->
-                        <footer>
-                            <p><strong>Total Sales:</strong> ₱{{ number_format($totalSales, 2) }}</p>
-                            <p><strong>Total Quantity Sold:</strong> {{ $totalQuantity }}</p>
-                        </footer>
                     @endif
 
                     <!-- Chart.js Bar Chart and Payment Methods Chart -->
@@ -265,10 +272,7 @@
                                 <canvas id="productSalesChart"></canvas>
                             </div>
                         </div>
-
-
                     </div>
-
                     <script>
                         const paymentLabels = @json($paymentLabels);
                         const paymentCounts = @json($paymentCounts);

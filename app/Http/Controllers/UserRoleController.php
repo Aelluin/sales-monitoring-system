@@ -10,7 +10,7 @@ class UserRoleController extends Controller
     public function index()
 {
     // Eager load the roles relationship
-    $users = User::with('roles')->get();
+    $users = User::with('roles')->paginate(5); // You can adjust the number 5 to your preferred number of users per page
 
     // Fetch all roles available in the system
     $roles = Role::all();
@@ -29,6 +29,18 @@ public function assignRole(Request $request, User $user)
     $user->roles()->sync([$request->role_id]);
 
     return redirect()->back()->with('success', 'Role assigned successfully!');
+}
+public function store(Request $request)
+{
+    // Validation logic here...
+
+    // Assuming user is created successfully:
+    session()->flash('success', 'User created successfully.');
+
+    // Or in case of an error:
+    session()->flash('error', 'There was an error creating the user.');
+
+    return redirect()->route('users.create');
 }
 
 

@@ -206,40 +206,49 @@ table td {
                     </div>
                 </header>
 
-                <!-- Year and Week Selector Form -->
-                <form method="GET" action="{{ route('sales.weekly') }}">
-                    <fieldset style="border: 2px solid #ddd; padding: 20px; margin-bottom: 20px;">
-                        <legend>Select Year and Week</legend>
+               <!-- Year and Week Selector Form -->
+<div class="flex items-center ">
+    <form method="GET" action="{{ route('sales.weekly') }}" class=" rounded-lg p-6 w-full max-w-4xl">
+        <div class="p-6">
+            <div class="flex items-end space-x-6">
+                <!-- Year Selector -->
+                <div class="flex flex-col">
+                    <label for="year" class="mb-1 font-medium">Select a Year:</label>
+                    <select name="year" id="year" class="border border-gray-300 rounded-md p-2 w-48">
+                        <option value="">-- Choose a Year --</option>
+                        @foreach ($years as $yearOption)
+                            <option value="{{ $yearOption }}" {{ old('year', $year) == $yearOption ? 'selected' : '' }}>
+                                {{ $yearOption }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                        <!-- Year Selector -->
-                        <label for="year">Select a Year:</label>
-                        <select name="year" id="year" style="padding: 5px; margin-bottom: 15px; width: 200px;">
-                            <option value="">-- Choose a Year --</option>
-                            @foreach ($years as $yearOption)
-                                <option value="{{ $yearOption }}" {{ old('year', $year) == $yearOption ? 'selected' : '' }}>{{ $yearOption }}</option>
-                            @endforeach
-                        </select>
+                <!-- Week Selector -->
+                <div class="flex flex-col">
+                    <label for="week" class="mb-1 font-medium">Select a Week:</label>
+                    <select name="week" id="week" class="border border-gray-300 rounded-md p-2 w-48">
+                        <option value="">-- Choose a Week --</option>
+                        @foreach ($weeksInYear as $index => $week)
+                            <option value="{{ $index + 1 }}" {{ old('week', $week) == $index + 1 ? 'selected' : '' }}>
+                                Week {{ $index + 1 }}
+                                ({{ \Carbon\Carbon::parse($week['start'])->format('M d') }} -
+                                 {{ \Carbon\Carbon::parse($week['end'])->format('M d') }})
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                        <br>
-
-                        <!-- Week Selector -->
-                        <label for="week">Select a Week:</label>
-                        <select name="week" id="week" style="padding: 5px; margin-bottom: 15px; width: 200px;">
-                            <option value="">-- Choose a Week --</option>
-                            @foreach ($weeksInYear as $index => $week)
-                                <option value="{{ $index + 1 }}" {{ old('week', $week) == $index + 1 ? 'selected' : '' }}>
-                                    Week {{ $index + 1 }} ({{ \Carbon\Carbon::parse($week['start'])->format('M d') }} - {{ \Carbon\Carbon::parse($week['end'])->format('M d') }})
-                                </option>
-                            @endforeach
-                        </select>
-
-                        <br>
-
-                        <button type="submit" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px;">
-                            Get Report
-                        </button>
-                    </fieldset>
-                </form>
+                <!-- Submit Button -->
+                <div class="flex">
+                    <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md">
+                        Get Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
 
                 @php
                     // Handle dynamic header text based on the week selection
@@ -249,7 +258,7 @@ table td {
                         $endDate = \Carbon\Carbon::parse($selectedWeek['end'])->format('M d');
                         $headerText = "Sales Report for Week $week ($startDate - $endDate)";
                     } else {
-                        $headerText = "Please select a year and week to view the sales report.";
+                        $headerText = "";
                     }
                 @endphp
 
@@ -295,7 +304,7 @@ table td {
     <div class="w-full bg-white p-6 rounded-lg shadow-md m-3">
         <h3 class="text-center font-bold mb-4">Sales Summary</h3>
         <footer>
-            <p class="text-center"><strong>Total Sales:</strong> ${{ number_format($totalSales, 2) }}</p>
+            <p class="text-center"><strong>Total Sales:</strong> ₱{{ number_format($totalSales, 2) }}</p>
             <p class="text-center"><strong>Total Quantity Sold:</strong> {{ $totalQuantity }}</p>
         </footer>
     </div>
