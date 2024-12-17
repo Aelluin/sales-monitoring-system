@@ -17,7 +17,7 @@
 
         /* Adjust sidebar to always span the full height */
         .sidebar {
-            height: 200vh !important;
+            height: 151vh !important;
             overflow-y: auto !important;
             background-color: #15151D;
             color: #ffffff;

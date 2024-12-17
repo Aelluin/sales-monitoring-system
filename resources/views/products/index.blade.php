@@ -119,8 +119,8 @@
 <x-app-layout>
     <div x-data="{ sidebarOpen: true, dropdownOpen: false }" class="flex h-screen">
         <!-- Sidebar -->
-        <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-full transition-all duration-300"
-            style="background-color: #15151D; color: #ffffff;">
+        <div :class="sidebarOpen ? 'w-64' : 'w-20'" class="flex flex-col h-screen transition-all duration-300"
+        style="background-color: #15151D; color: #ffffff; overflow-y-auto; height: 68rem;">
             <div class="flex items-center justify-between p-4 border-b border-blue-700">
                 <div class="flex justify-center w-full">
                     <img x-show="sidebarOpen" src="{{ asset('img/gg.png') }}" alt="My Dashboard"
