@@ -126,6 +126,7 @@ class SalesController extends Controller
             $monthlyData[$sale->month] = $sale->total_sales;
         }
 
+        // Ensure all months from 1 to 12 have data
         for ($month = 1; $month <= 12; $month++) {
             if (!isset($monthlyData[$month])) {
                 $monthlyData[$month] = 0;
@@ -378,69 +379,71 @@ class SalesController extends Controller
 
         return response()->json($orders);
     }
-    public function monthly(Request $request)
-{
-    // Get the selected month and year, or default to the current month and year
-    $month = $request->input('month', Carbon::now()->format('m')); // Default to current month (numeric)
-    $year = $request->input('year', Carbon::now()->format('Y')); // Default to current year
+   // Monthly sales data with improved logic for newly recorded sales
+   public function monthly(Request $request)
+   {
+       $month = $request->input('month', Carbon::now()->format('m')); // Default to current month (numeric)
+       $year = $request->input('year', Carbon::now()->format('Y')); // Default to current year
 
-    // Create a Carbon instance for the first and last day of the selected month
-    $startDate = Carbon::createFromFormat('Y-m', "$year-$month")->startOfMonth();
-    $endDate = Carbon::createFromFormat('Y-m', "$year-$month")->endOfMonth();
+       // Create a Carbon instance for the first and last day of the selected month
+       $startDate = Carbon::createFromFormat('Y-m', "$year-$month")->startOfMonth();
+       $endDate = Carbon::createFromFormat('Y-m', "$year-$month")->endOfMonth();
 
-    // Fetch paginated sales data for the selected month
-    $monthlySales = Sale::with(['product']) // Eager load product details
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->orderBy('created_at', 'asc')
-        ->paginate(15);  // Paginate with 15 items per page
+       // Fetch paginated sales data for the selected month, sorted by created_at in descending order
+       $monthlySales = Sale::with(['product']) // Eager load product details
+           ->whereBetween('created_at', [$startDate, $endDate])
+           ->orderBy('created_at', 'desc')  // Sort by latest sales first
+           ->paginate(15);  // Paginate with 15 items per page
 
-    // Calculate total sales and total quantity sold
-    $totalSales = $monthlySales->sum('total_price');
-    $totalQuantity = $monthlySales->sum('quantity');
+       // Calculate total sales and total quantity sold
+       $totalSales = $monthlySales->sum('total_price');
+       $totalQuantity = $monthlySales->sum('quantity');
 
-    // Prepare data for the chart (sales by product)
-    $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->groupBy('product_id')
-        ->with('product')
-        ->get();
+       // Prepare data for the chart (sales by product)
+       $productSales = Sale::select('product_id', DB::raw('SUM(quantity) as total_quantity'))
+           ->whereBetween('created_at', [$startDate, $endDate])
+           ->groupBy('product_id')
+           ->with('product')
+           ->get();
 
-    $productNames = $productSales->pluck('product.name'); // Product names
-    $quantities = $productSales->pluck('total_quantity'); // Quantities sold for each product
+       $productNames = $productSales->pluck('product.name'); // Product names
+       $quantities = $productSales->pluck('total_quantity'); // Quantities sold for each product
 
-    // Prepare data for the payment methods chart
-    $paymentMethods = Sale::select('payment_method', DB::raw('count(*) as method_count'))
-        ->whereBetween('created_at', [$startDate, $endDate])
-        ->groupBy('payment_method')
-        ->get();
+       // Prepare data for the payment methods chart
+       $paymentMethods = Sale::select('payment_method', DB::raw('count(*) as method_count'))
+           ->whereBetween('created_at', [$startDate, $endDate])
+           ->groupBy('payment_method')
+           ->get();
 
-    $paymentLabels = $paymentMethods->pluck('payment_method'); // Payment method names (e.g., 'Cash', 'Credit Card')
-    $paymentCounts = $paymentMethods->pluck('method_count');   // Counts for each payment method
+       $paymentLabels = $paymentMethods->pluck('payment_method'); // Payment method names (e.g., 'Cash', 'Credit Card')
+       $paymentCounts = $paymentMethods->pluck('method_count');   // Counts for each payment method
 
-    // Get the full month name for display
-    $monthName = $startDate->format('F Y');
+       // Get the full month name for display
+       $monthName = $startDate->format('F Y');
 
-    // Get all years with sales data for the year selector
-    $years = Sale::selectRaw('YEAR(created_at) as year')
-        ->distinct()
-        ->orderBy('year', 'desc')
-        ->pluck('year');
+       // Get all years with sales data for the year selector
+       $years = Sale::selectRaw('YEAR(created_at) as year')
+           ->distinct()
+           ->orderBy('year', 'desc')
+           ->pluck('year');
 
-    // Pass the data to the view
-    return view('sales.monthly', compact(
-        'monthlySales',
-        'totalSales',
-        'totalQuantity',
-        'productNames',
-        'quantities',
-        'paymentLabels',    // New data for chart.js
-        'paymentCounts',    // New data for chart.js
-        'month',
-        'year',
-        'monthName',
-        'years'
-    ));
-}
+       // Pass the data to the view
+       return view('sales.monthly', compact(
+           'monthlySales',
+           'totalSales',
+           'totalQuantity',
+           'productNames',
+           'quantities',
+           'paymentLabels',    // New data for chart.js
+           'paymentCounts',    // New data for chart.js
+           'month',
+           'year',
+           'monthName',
+           'years'
+       ));
+   }
+
+
 public function weekly(Request $request)
 {
     // Get selected year and week or default to current year and null for week
@@ -486,10 +489,10 @@ public function weekly(Request $request)
         $selectedWeekStart = $weeksInYear[$week - 1]['start'];
         $selectedWeekEnd = $weeksInYear[$week - 1]['end'];
 
-        // Fetch weekly sales data
+        // Fetch weekly sales data sorted by created_at in descending order
         $weeklySales = Sale::with(['product'])
             ->whereBetween('created_at', [$selectedWeekStart, $selectedWeekEnd])
-            ->orderBy('created_at', 'asc')
+            ->orderBy('created_at', 'desc') // Sort by latest sales first
             ->get();
 
         $totalSales = $weeklySales->sum('total_price');
