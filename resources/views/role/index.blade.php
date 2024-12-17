@@ -221,119 +221,124 @@
                     @endif
                 </nav>
             </div>
+<!-- Main Content -->
+<div class="flex-1 p-6 flex flex-col items-center">
+    <h1 class="header-text text-2xl font-bold mb-6 text-center">User Role Management</h1>
 
-            <!-- Main Content -->
-            <div class="flex-1 p-6">
-                <h1 class="header-text">User Role Management</h1>
-
-                <!-- Display Success/Error Messages -->
-                <div class="message-area">
-                    @if(session('success'))
-                        <div class="success">
-                            {{ session('success') }}
-                        </div>
-                    @elseif(session('error'))
-                        <div class="error">
-                            {{ session('error') }}
-                        </div>
-                    @endif
-                </div>
-
-                <!-- Create Gmail/User Button -->
-                <div class="mt-6 flex justify-center">
-                    <button @click="openCreateUserModal = true" class="create-button px-6 py-3 text-lg">
-                        Create Gmail/User
-                    </button>
-                </div>
-
-                <!-- Modal for Creating Gmail/User -->
-                <div x-show="openCreateUserModal" x-transition @click.outside="openCreateUserModal = false"
-                    class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
-                    <div class="bg-white rounded-lg shadow-lg p-6 w-96">
-                        <h2 class="text-2xl font-semibold mb-4">Create Gmail/User</h2>
-                        <form action="{{ route('users.create') }}" method="POST" class="space-y-4">
-                            @csrf
-                            <div>
-                                <label for="name" class="block text-sm font-medium">Name</label>
-                                <input type="text" name="name" id="name" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter name" required />
-                            </div>
-                            <div>
-                                <label for="email" class="block text-sm font-medium">Email</label>
-                                <input type="email" name="email" id="email" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter email" required />
-                            </div>
-                            <div>
-                                <label for="password" class="block text-sm font-medium">Password</label>
-                                <input type="password" name="password" id="password" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter password" required />
-                            </div>
-                            <div>
-                                <label for="password_confirmation" class="block text-sm font-medium">Confirm Password</label>
-                                <input type="password" name="password_confirmation" id="password_confirmation" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Confirm password" required />
-                            </div>
-                            <div>
-                                <label for="role" class="block text-sm font-medium">Role</label>
-                                <select name="role" id="role" class="border border-gray-300 rounded-lg w-full py-2 px-3">
-                                    <option value="">Select Role</option>
-                                    @foreach($roles as $role)
-                                        <option value="{{ $role->id }}">{{ $role->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="flex justify-end space-x-3">
-                                <button type="button" @click="openCreateUserModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancel</button>
-                                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">Create</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Role</th>
-                            <th>Assign Role</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($users as $user)
-                        <tr>
-                            <td>{{ $user->name }}</td>
-                            <td>{{ $user->email }}</td>
-                            <td>
-                                @php
-                                $role = $user->roles->first();
-                                @endphp
-                                <span class="{{ $role ? 'badge-success' : 'badge-secondary' }}">
-                                    {{ $role ? $role->name : 'No Role Assigned' }}
-                                </span>
-                            </td>
-                            <td>
-                                <form action="{{ route('admin.users.assignRole', $user->id) }}" method="POST"
-                                    class="flex items-center space-x-3">
-                                    @csrf
-                                    <select name="role_id" class="form-select border-2 rounded-lg py-2 px-3 text-gray-700">
-                                        <option value="">Select Role</option>
-                                        @foreach($roles as $roleOption)
-                                        <option value="{{ $roleOption->id }}"
-                                            {{ isset($role) && $roleOption->id === $role->id ? 'selected' : '' }}>
-                                            {{ $roleOption->name }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    <button type="submit"
-                                        class="btn btn-primary btn-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">Assign/Update</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-
+    <!-- Display Success/Error Messages -->
+    <div class="message-area mb-6 w-full max-w-2xl">
+        @if(session('success'))
+            <div class="success bg-green-500 text-white p-3 rounded-lg text-center">
+                {{ session('success') }}
             </div>
+        @elseif(session('error'))
+            <div class="error bg-red-500 text-white p-3 rounded-lg text-center">
+                {{ session('error') }}
+            </div>
+        @endif
+    </div>
+
+    <!-- Create Gmail/User Button -->
+    <div class="mt-6 mb-6 flex justify-center w-full">
+        <button @click="openCreateUserModal = true" class="create-button px-6 py-3 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+            Create Gmail/User
+        </button>
+    </div>
+
+    <!-- Modal for Creating Gmail/User -->
+    <div x-show="openCreateUserModal" x-transition @click.outside="openCreateUserModal = false" class="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50 z-50">
+        <div class="bg-white p-6 w-96 rounded-lg">
+            <h2 class="text-2xl font-semibold mb-4">Create Gmail/User</h2>
+            <form action="{{ route('users.create') }}" method="POST" class="space-y-4">
+                @csrf
+                <div>
+                    <label for="name" class="block text-sm font-medium">Name</label>
+                    <input type="text" name="name" id="name" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter name" required />
+                </div>
+                <div>
+                    <label for="email" class="block text-sm font-medium">Email</label>
+                    <input type="email" name="email" id="email" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter email" required />
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium">Password</label>
+                    <input type="password" name="password" id="password" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Enter password" required />
+                </div>
+                <div>
+                    <label for="password_confirmation" class="block text-sm font-medium">Confirm Password</label>
+                    <input type="password" name="password_confirmation" id="password_confirmation" class="border border-gray-300 rounded-lg w-full py-2 px-3" placeholder="Confirm password" required />
+                </div>
+                <div>
+                    <label for="role" class="block text-sm font-medium">Role</label>
+                    <select name="role" id="role" class="border border-gray-300 rounded-lg w-full py-2 px-3">
+                        <option value="">Select Role</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}">{{ $role->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex justify-between mt-4">
+                    <button type="button" @click="openCreateUserModal = false" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-all">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Table -->
+    <div class="overflow-x-auto mt-6 w-full max-w-8xl">
+        <table class="table w-full table-auto border-collapse text-center">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Name</th>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Email</th>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Role</th>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Assign Role</th>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($users as $user)
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-700">{{ $user->name }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-700">{{ $user->email }}</td>
+                    <td class="px-6 py-4 text-sm">
+                        @php
+                        $role = $user->roles->first();
+                        @endphp
+                        <span class="{{ $role ? 'badge-success' : 'badge-secondary' }}">
+                            {{ $role ? $role->name : 'No Role Assigned' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <form action="{{ route('admin.users.assignRole', $user->id) }}" method="POST" class="flex items-center justify-center space-x-3">
+                            @csrf
+                            <select name="role_id" class="form-select border-2 rounded-lg py-2 px-3 text-gray-700">
+                                <option value="">Select Role</option>
+                                @foreach($roles as $roleOption)
+                                <option value="{{ $roleOption->id }}" {{ isset($role) && $roleOption->id === $role->id ? 'selected' : '' }}>
+                                    {{ $roleOption->name }}
+                                </option>
+                                @endforeach
+                            </select>
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-all">Assign</button>
+                        </form>
+                    </td>
+                    <td class="px-6 py-4">
+                        <form action="{{ route('admin.users.delete', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition-all">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+
         </div>
     </x-app-layout>
 </body>
-
 
 </html>

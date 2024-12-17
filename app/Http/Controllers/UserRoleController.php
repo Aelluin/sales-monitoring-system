@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class UserRoleController extends Controller
@@ -10,7 +11,8 @@ class UserRoleController extends Controller
     public function index()
 {
     // Eager load the roles relationship
-    $users = User::with('roles')->paginate(5); // You can adjust the number 5 to your preferred number of users per page
+    $users = User::with('roles')->paginate(5); // Correct pagination usage
+
 
     // Fetch all roles available in the system
     $roles = Role::all();
@@ -42,7 +44,28 @@ public function store(Request $request)
 
     return redirect()->route('users.create');
 }
+public function delete(User $user)
+    {
+        try {
+            // Delete the user
+            $user->delete();
 
+            return redirect()->route('role.index')->with('success', 'User deleted successfully!');
+        } catch (\Exception $e) {
+            return redirect()->route('role.index')->with('error', 'Failed to delete user: ' . $e->getMessage());
+        }
+    }
+    public function removeRole(Request $request, User $user)
+{
+    $request->validate([
+        'role_id' => 'required|exists:roles,id',
+    ]);
+
+    // Detach the role from the user
+    $user->roles()->detach($request->role_id);
+
+    return redirect()->back()->with('success', 'Role removed successfully!');
+}
 
 }
 

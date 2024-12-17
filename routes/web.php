@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SalesController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserLogController;
+use App\Http\Controllers\UserRoleController;
 use App\Models\Sale;
 use App\Models\Product;
 use App\Http\Controllers\UserController;
@@ -190,7 +191,7 @@ Route::middleware(['auth', 'verified', LogAllActions::class])->group(function ()
     });
 
     Route::get('/admin/users', [UserController::class, 'index'])->name('admin.users.index');
-    Route::post('/admin/users/{user}/assign-role', [UserController::class, 'assignRole'])->name('admin.users.assignRole');
+
     Route::post('/assign-role/{user}', [UserController::class, 'assignRole'])->name('assign.role');
 });
 
@@ -199,6 +200,13 @@ Route::post('/create-user', [UserController::class, 'store'])->name('users.creat
 Route::post('/admin/users', [UserController::class, 'store'])->name('admin.users.store');
 
 Route::delete('/admin/users/{user}', [UserController::class, 'destroy'])->name('admin.users.delete');
+
+Route::post('/users/{user}/assign-role', [UserRoleController::class, 'assignRole'])->name('admin.users.assignRole');
+
+Route::delete('/users/{user}', [UserRoleController::class, 'delete'])->name('users.delete');
+
+Route::get('/roles', [UserRoleController::class, 'index'])->name('role.index');
+
 
 // Include authentication routes
 require __DIR__ . '/auth.php';

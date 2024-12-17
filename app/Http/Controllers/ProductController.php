@@ -36,7 +36,7 @@ class ProductController extends Controller
         }
 
         // Fetch filtered products with pagination (10 products per page)
-        $products = $query->paginate(10);
+        $products = $query->paginate(9);
 
         // Pass the products to the view with the current filter parameters
         return view('products.index', compact('products', 'stockStatus', 'searchTerm'));
