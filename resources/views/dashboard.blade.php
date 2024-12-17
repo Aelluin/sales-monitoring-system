@@ -80,11 +80,12 @@
                 </div>
 
                 <nav class="flex-1 mt-4 space-y-2 px-2">
-                    <a href="/dashboard" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
-                        :class="{'active': window.location.pathname == '/dashboard'}">
-                        <span class="material-icons mr-4 text-xl">dashboard</span>
-                        <span x-show="sidebarOpen" class="flex-1 text-base">Dashboard</span>
-                    </a>
+                    <a href="/dashboard"
+                    class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
+                    :class="{'bg-blue-700 text-white': window.location.pathname == '/dashboard', 'active': window.location.pathname == '/dashboard'}">
+                     <span class="material-icons mr-4 text-xl">dashboard</span>
+                     <span x-show="sidebarOpen" class="flex-1 text-base">Dashboard</span>
+                 </a>
                     <a href="/products" class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200"
                         :class="{'active': window.location.pathname == '/products'}">
                         <span class="material-icons mr-4 text-xl">inventory</span>
@@ -131,6 +132,11 @@
                         <span class="material-icons mr-4 text-xl">history</span>
                         <span x-show="sidebarOpen" class="flex-1 text-base">Logs</span>
                     </a>
+                    <a href="/admin/users"
+                        class="flex items-center py-3 px-4 rounded-md text-lg hover:bg-blue-700 hover:text-white transition-all duration-200">
+                        <span class="material-icons mr-4 text-xl">people</span>
+                        <span x-show="sidebarOpen" class="flex-1 text-base">User Management</span>
+                    </a>
                     @endif
                 </nav>
             </div>
@@ -173,13 +179,14 @@
                 <h1 class="text-4xl font-semibold text-gray-800 mb-6">Dashboard</h1>
 
                 <!-- Year Selector -->
-                <div class="select-container mb-6">
-                    <label for="yearSelector" class="text-lg font-semibold">Select Year</label>
-                    <select id="yearSelector" class="p-2 border border-gray-300 rounded-md mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <option value="2023">2023</option>
-                        <option value="2024">2024</option>
-                    </select>
-                </div>
+<div class="select-container mb-6">
+    <label for="yearSelector" class="text-lg font-semibold">Select Year</label>
+    <select id="yearSelector" class="p-2 border border-gray-300 rounded-md mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32">
+        <option value="2023">2023</option>
+        <option value="2024">2024</option>
+    </select>
+</div>
+
 
                 <!-- Seasonal Sales Trends Section -->
                 <div class="chart-container mb-8">
