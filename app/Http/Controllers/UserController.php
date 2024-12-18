@@ -95,13 +95,16 @@ public function archived()
 }
 
 // UserController
-public function unarchive($id)
+public function unarchive(User $user)
 {
-    $user = User::findOrFail($id);
-    $user->archived = false;  // Set archived to false
-    $user->save();
+    // Make sure the user exists
+    if ($user) {
+        // Update the `is_archived` field instead of inserting a new record
+        $user->is_archived = false;
+        $user->save();  // This will update the existing record, not insert a new one
+    }
 
-    return redirect()->route('users.archived')->with('success', 'User has been unarchived successfully.');
+    return redirect()->route('admin.users.index')->with('success', 'User successfully unarchived.');
 }
 
 

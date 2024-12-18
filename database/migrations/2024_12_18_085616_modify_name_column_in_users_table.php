@@ -12,14 +12,21 @@ return new class extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->boolean('is_archived')->default(false);
+            $table->string('name')->nullable()->change();  // Make 'name' nullable
+            $table->string('email')->nullable()->change();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
     public function down()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropColumn('is_archived');
+            $table->string('name')->nullable(false)->change();  // Reverse the nullable change
+            $table->string('email')->nullable(false)->change();
         });
     }
 };

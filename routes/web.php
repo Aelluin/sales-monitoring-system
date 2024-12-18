@@ -231,5 +231,15 @@ Route::prefix('admin')->group(function () {
     Route::patch('/users/{id}/unarchive', [UserRoleController::class, 'unarchive'])->name('admin.users.unarchive');  // Unarchive user
 });
 
+Route::patch('/users/{user}/unarchive', [UserController::class, 'unarchive'])->name('admin.users.unarchive');
+
+// Route to display archived users
+Route::get('/admin/users/archived', [UserRoleController::class, 'archiveList'])->name('admin.users.archived');
+
+// Route to archive a user
+Route::patch('/admin/users/{user}/archive', [UserRoleController::class, 'archive'])->name('admin.users.archive');
+
+// Route to unarchive a user
+Route::patch('/admin/users/{user}/unarchive', [UserRoleController::class, 'unarchive'])->name('admin.users.unarchive');
 
 require __DIR__ . '/auth.php';
