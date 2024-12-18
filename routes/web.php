@@ -242,4 +242,8 @@ Route::patch('/admin/users/{user}/archive', [UserRoleController::class, 'archive
 // Route to unarchive a user
 Route::patch('/admin/users/{user}/unarchive', [UserRoleController::class, 'unarchive'])->name('admin.users.unarchive');
 
+
+// In routes/web.php
+Route::get('/admin/users', [UserController::class, 'index']);
+
 require __DIR__ . '/auth.php';
