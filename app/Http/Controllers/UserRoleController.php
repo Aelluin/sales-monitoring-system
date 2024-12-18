@@ -10,16 +10,12 @@ class UserRoleController extends Controller
 {
     public function index()
 {
-    // Eager load the roles relationship
-    $users = User::with('roles')->paginate(5); // Correct pagination usage
+    // Fetch only active users (non-archived users)
+    $users = User::where('archived', false)->get(); // Assuming you have an 'archived' column
+    $roles = Role::all(); // You can modify this as per your requirements
 
-
-    // Fetch all roles available in the system
-    $roles = Role::all();
-
-    return view('role.index', compact('users', 'roles'));
+    return view('users.index', compact('users', 'roles'));
 }
-
 
 public function assignRole(Request $request, User $user)
 {
@@ -34,15 +30,23 @@ public function assignRole(Request $request, User $user)
 }
 public function store(Request $request)
 {
-    // Validation logic here...
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email',
+        'password' => 'required|string|min:8|confirmed',
+    ]);
 
-    // Assuming user is created successfully:
-    session()->flash('success', 'User created successfully.');
+    try {
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
 
-    // Or in case of an error:
-    session()->flash('error', 'There was an error creating the user.');
-
-    return redirect()->route('users.create');
+        return redirect()->route('users.index')->with('success', 'User created successfully.');
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Failed to create user: ' . $e->getMessage());
+    }
 }
 public function delete(User $user)
     {
@@ -65,6 +69,30 @@ public function delete(User $user)
     $user->roles()->detach($request->role_id);
 
     return redirect()->back()->with('success', 'Role removed successfully!');
+}
+
+public function archive($id) {
+    $user = User::findOrFail($id);
+    $user->is_archived = true; // Ensure you use the correct column
+    $user->save();
+
+    return redirect()->back()->with('success', 'User archived successfully.');
+}
+
+
+// Controller method to unarchive a user
+public function unarchive($id)
+{
+    $user = User::findOrFail($id);
+    $user->archived = false;  // Set archived to false
+    $user->save();
+
+    return redirect()->route('users.archived')->with('success', 'User unarchived successfully.');
+}
+public function archiveList()
+{
+    $archivedUsers = User::where('is_archived', true)->get();
+    return view('userarchive', compact('archivedUsers'));
 }
 
 }

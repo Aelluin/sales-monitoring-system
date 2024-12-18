@@ -17,7 +17,10 @@ class UserController extends Controller
         // Check if the logged-in user has the 'admin' role
         if (!Auth::user()->hasRole('admin')) {
             // If not, redirect or return an unauthorized response
+
             return redirect()->route('home')->with('error', 'You do not have permission to access this page.');
+
+
         }
 
         // Get all users and their roles
@@ -26,6 +29,8 @@ class UserController extends Controller
 
         // Return the view
         return view('role.index', compact('users', 'roles'));
+
+
     }
 
     // Assign a role to a user
@@ -79,6 +84,24 @@ class UserController extends Controller
     } catch (\Exception $e) {
         return back()->with('error', 'An error occurred while deleting the user.');
     }
+}
+
+public function archived()
+{
+    // Only fetch users who are archived
+    $archivedUsers = User::where('archived', true)->get();
+
+    return view('admin.users.archived', compact('archivedUsers'));
+}
+
+// UserController
+public function unarchive($id)
+{
+    $user = User::findOrFail($id);
+    $user->archived = false;  // Set archived to false
+    $user->save();
+
+    return redirect()->route('users.archived')->with('success', 'User has been unarchived successfully.');
 }
 
 

@@ -215,5 +215,21 @@ Route::post('products/{id}/unarchive', [ProductController::class, 'unarchive'])-
 // Add this route to make "archived" accessible at /archived
 Route::get('/archived', [ProductController::class, 'archived'])->name('products.archived');
 
-// Include authentication routes
+
+// Routes for users (archiving and unarchiving)
+Route::patch('/users/{id}/unarchive', [UserRoleController::class, 'unarchive'])->name('users.unarchive');
+Route::patch('/users/{id}/archive', [UserRoleController::class, 'archive'])->name('users.archive');
+
+// Route to view archived users
+Route::get('/users/archived', [UserRoleController::class, 'archiveList'])->name('users.archived');
+
+
+// Admin routes with the 'admin' prefix
+Route::prefix('admin')->group(function () {
+    Route::get('/users/archived', [UserRoleController::class, 'archiveList'])->name('admin.users.archived');  // List archived users
+    Route::patch('/users/{id}/archive', [UserRoleController::class, 'archive'])->name('admin.users.archive');  // Archive user
+    Route::patch('/users/{id}/unarchive', [UserRoleController::class, 'unarchive'])->name('admin.users.unarchive');  // Unarchive user
+});
+
+
 require __DIR__ . '/auth.php';

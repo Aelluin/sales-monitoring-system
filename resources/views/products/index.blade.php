@@ -113,6 +113,34 @@
             background-color: #f8f8f8;
             color: #333333; /* Dark text color */
         }
+
+        .archive-button {
+    background-color: #e23737; /* Yellow background color */
+    color: #fff; /* White text */
+    padding: 8px 16px; /* Padding for button */
+    border-radius: 5px; /* Rounded corners */
+    border: none; /* Remove default border */
+    font-size: 16px; /* Font size */
+
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: background-color 0.3s, transform 0.2s; /* Smooth transition */
+}
+
+.archive-button:hover {
+    background-color: #db2727;
+    transform: scale(1.05); /* Slight zoom effect on hover */
+}
+
+.archive-button:focus {
+    outline: none; /* Remove focus outline */
+    box-shadow: 0 0 5px rgba(255, 204, 0, 0.7); /* Glow effect on focus */
+}
+
+.archive-button:disabled {
+    background-color: #ccc; /* Disabled state with gray color */
+    cursor: not-allowed; /* Not allowed cursor */
+}
+
     </style>
 </head>
 <body>

@@ -284,15 +284,15 @@
         </div>
     </div>
 
-    <!-- User Table -->
-    <div class="overflow-x-auto mt-6 w-full max-w-8xl">
+      <!-- User Table -->
+      <div class="overflow-x-auto mt-6 w-full max-w-8xl">
         <table class="table w-full table-auto border-collapse text-center">
             <thead class="bg-gray-100">
                 <tr>
                     <th class="px-6 py-3 text-sm font-medium text-gray-700">Name</th>
                     <th class="px-6 py-3 text-sm font-medium text-gray-700">Email</th>
                     <th class="px-6 py-3 text-sm font-medium text-gray-700">Role</th>
-                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Assign Role</th>
+                    <th class="px-6 py-3 text-sm font-medium text-gray-700">Status</th>
                     <th class="px-6 py-3 text-sm font-medium text-gray-700">Actions</th>
                 </tr>
             </thead>
@@ -309,36 +309,37 @@
                             {{ $role ? $role->name : 'No Role Assigned' }}
                         </span>
                     </td>
-                    <td class="px-6 py-4">
-                        <form action="{{ route('admin.users.assignRole', $user->id) }}" method="POST" class="flex items-center justify-center space-x-3">
-                            @csrf
-                            <select name="role_id" class="form-select border-2 rounded-lg py-2 px-3 text-gray-700">
-                                <option value="">Select Role</option>
-                                @foreach($roles as $roleOption)
-                                <option value="{{ $roleOption->id }}" {{ isset($role) && $roleOption->id === $role->id ? 'selected' : '' }}>
-                                    {{ $roleOption->name }}
-                                </option>
-                                @endforeach
-                            </select>
-                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-all">Assign</button>
-                        </form>
+                    <td class="px-6 py-4 text-sm">
+                        @if($user->archived)
+                        <span class="badge-secondary">Archived</span>
+                        @else
+                        <span class="badge-success">Active</span>
+                        @endif
                     </td>
                     <td class="px-6 py-4">
-                        <form action="{{ route('admin.users.delete', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                        @if($user->archived)
+                        <form action="{{ route('admin.users.unarchive', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to unarchive this user?')">
                             @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-700 transition-all">Delete</button>
+                            @method('PATCH')
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-all">Unarchive</button>
                         </form>
+                        @else
+                        <form action="{{ route('admin.users.archive', $user->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to archive this user?')">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700 transition-all">Archive</button>
+                        </form>
+                        @endif
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
+        <a href="{{ route('users.archived') }}" class="btn btn-primary mt-4">View Archived Users</a>
     </div>
-
-
-        </div>
-    </x-app-layout>
+</div>
+</div>
+</x-app-layout>
 </body>
 
 </html>
