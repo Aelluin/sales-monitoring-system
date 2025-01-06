@@ -179,13 +179,17 @@
                 <h1 class="text-4xl font-semibold text-gray-800 mb-6">Dashboard</h1>
 
                 <!-- Year Selector -->
-<div class="select-container mb-6">
-    <label for="yearSelector" class="text-lg font-semibold">Select Year</label>
-    <select id="yearSelector" class="p-2 border border-gray-300 rounded-md mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500 w-32">
-        <option value="2023">2023</option>
-        <option value="2024">2024</option>
-    </select>
-</div>
+                <div>
+                    <label for="yearSelector">Select Year:</label>
+                    <select id="yearSelector" onchange="fetchTotalSales(this.value)">
+                        @foreach($years as $year)
+                            <option value="{{ $year }}" {{ $year == date('Y') ? 'selected' : '' }}>
+                                {{ $year }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
 
 
                 <!-- Seasonal Sales Trends Section -->
@@ -235,9 +239,10 @@
         });
 
         // Function to format price as Philippine Peso (₱) with commas
-        function formatPrice(amount) {
-            return '₱' + amount.toLocaleString('en-PH');
-        }
+function formatPrice(amount) {
+    return '₱' + amount.toLocaleString('en-PH');
+}
+
 
         // Fetching Seasonal Sales Data for the selected year
         function fetchSeasonalData(year) {
@@ -305,19 +310,31 @@
                 });
         }
 
-        // Fetching Total Sales Data
-        function fetchTotalSales(year) {
-            fetch(`/dashboard/total-sales/${year}`)
-                .then(response => response.json())
-                .then(data => {
-                    const totalSalesElement = document.querySelector('#totalSales');
-                    totalSalesElement.innerText = data.total_sales ? formatPrice(data.total_sales) : 'No data available';
-                })
-                .catch(err => {
-                    console.error('Error fetching total sales:', err);
-                    document.querySelector('#totalSales').innerText = 'Error: Unable to fetch total sales';
-                });
-        }
+      // Fetching Total Sales Data
+function fetchTotalSales(year) {
+    fetch(`/dashboard/total-sales/${year}`)
+        .then(response => response.json())
+        .then(data => {
+            const totalSalesElement = document.querySelector('#totalSales');
+            totalSalesElement.innerText = data.total_sales
+                ? formatPrice(data.total_sales) // Format the sales data with commas
+                : 'No data available';
+        })
+        .catch(err => {
+            console.error('Error fetching total sales:', err);
+            document.querySelector('#totalSales').innerText = 'Error: Unable to fetch total sales';
+        });
+        function formatPrice(value) {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    }).format(value);
+}
+
+}
+
 
         // Fetching Top Products Data
         function fetchTopProducts(year) {

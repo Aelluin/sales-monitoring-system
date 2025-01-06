@@ -106,6 +106,31 @@ public function unarchive(User $user)
 
     return redirect()->route('admin.users.index')->with('success', 'User successfully unarchived.');
 }
+public function login(Request $request)
+{
+    // Validate the login data
+    $credentials = $request->only('email', 'password');
 
+    // Attempt to authenticate the user
+    if (Auth::attempt($credentials)) {
+        // Get the authenticated user
+        $user = Auth::user();
+
+        // Check if the user is archived
+        if ($user->is_archived) {
+            // Log the user out if they are archived
+            Auth::logout();
+
+            // Redirect back with an error message
+            return redirect()->back()->with('error', 'Your account is archived and cannot be accessed.');
+        }
+
+        // If the user is not archived, continue with the login process
+        return redirect()->intended('/dashboard'); // or wherever your redirect goes
+    }
+
+    // If authentication fails, redirect back with an error
+    return redirect()->back()->with('error', 'Invalid credentials');
+}
 
 }

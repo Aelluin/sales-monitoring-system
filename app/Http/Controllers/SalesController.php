@@ -140,6 +140,9 @@ class SalesController extends Controller
         // Calculate total revenue
         $totalRevenue = Sale::sum('total_price');
 
+        // Add commas for thousands separators
+        $formattedTotalRevenue = number_format($totalRevenue, 2);
+
         // Get the total number of sales
         $totalSalesCount = Sale::count();
 
@@ -152,18 +155,21 @@ class SalesController extends Controller
             ->get();
 
         if ($bestSellingProducts->isEmpty()) {
-            $bestSellingProducts = collect([ (object)[ 'product_name' => 'No products sold', 'total_quantity' => 0 ] ]);
+            $bestSellingProducts = collect([(object)[
+                'product_name' => 'No products sold',
+                'total_quantity' => 0
+            ]]);
         }
 
         // Get the recent orders
         $recentOrders = Sale::with('product')->orderBy('created_at', 'desc')->take(5)->get();
 
-        // Seasonal sales data by season (mapped to months)
+        // Seasonal sales data by season
         $seasons = [
-            "Winter" => [12, 1, 2], // December, January, February
-            "Spring" => [3, 4, 5],  // March, April, May
-            "Summer" => [6, 7, 8],  // June, July, August
-            "Fall" => [9, 10, 11],  // September, October, November
+            "Winter" => [12, 1, 2],
+            "Spring" => [3, 4, 5],
+            "Summer" => [6, 7, 8],
+            "Fall" => [9, 10, 11],
         ];
 
         $seasonalData = [];
@@ -172,12 +178,17 @@ class SalesController extends Controller
                 ->sum('total_price');
         }
 
+        // Generate a list of years starting from 2023
+        $currentYear = now()->year;
+        $years = range(2023, $currentYear); // Start from 2023
+
         return view('dashboard', compact(
-            'totalRevenue',
+            'formattedTotalRevenue',
             'totalSalesCount',
             'bestSellingProducts',
             'recentOrders',
-            'seasonalData'
+            'seasonalData',
+            'years' // Pass the years to the view
         ));
     }
 
@@ -362,8 +373,11 @@ class SalesController extends Controller
     public function getTotalSales($year)
     {
         $totalSales = Sale::whereYear('created_at', $year)->sum('total_price');
-        return response()->json(['total_sales' => $totalSales]);
+        return response()->json([
+            'total_sales' => $totalSales, // Return raw number
+        ]);
     }
+
 
     public function getTopProducts($year)
     {

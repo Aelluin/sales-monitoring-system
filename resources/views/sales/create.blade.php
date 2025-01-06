@@ -7,6 +7,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/alpinejs" defer></script>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+     <!-- Select2 CSS -->
+     <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
     <title>Create Sales</title>
     <style>
         /* General Styling for Success and Error Messages */
@@ -233,14 +235,16 @@
                             <form action="{{ route('sales.store') }}" method="POST">
                                 @csrf
 
-                                <label for="product_id">Product:</label>
-                                <select name="product_id" id="product_id" required>
-                                    @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ old('product_id') == $product->id ? 'selected' : '' }}>
-                                            {{ $product->name }} - ₱{{ number_format($product->price, 2) }} (Stock: {{ $product->quantity }})
-                                        </option>
-                                    @endforeach
-                                </select>
+
+                                 <!-- Searchable Dropdown -->
+                        <label for="product_id">Product:</label>
+                        <select name="product_id" id="product_id" class="select2" required>
+                            @foreach($products as $product)
+                                <option value="{{ $product->id }}">
+                                    {{ $product->name }} - ₱{{ number_format($product->price, 2) }} (Stock: {{ $product->quantity }})
+                                </option>
+                            @endforeach
+                        </select>
                                 @error('product_id')
                                     <div class="text-red-500 text-sm">{{ $message }}</div>
                                 @enderror
@@ -292,6 +296,17 @@
             </div>
         </div>
     </x-app-layout>
+     <!-- Include Select2 JS -->
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+     <script>
+         $(document).ready(function() {
+             $('#product_id').select2({
+                 placeholder: "Select a product",
+                 allowClear: true,
+             });
+         });
+     </script>
 
 </body>
 

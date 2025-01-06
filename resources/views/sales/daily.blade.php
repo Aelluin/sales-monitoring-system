@@ -301,7 +301,7 @@
             <td>₱{{ number_format($sale['total_price'], 2) }}</td>
 
             <td>{{ $sale['payment_method'] }}</td>  <!-- Payment method -->
-            <td>{{ $sale['created_at']->format('Y-m-d') }}</td>  <!-- Date of sale -->
+            <td>{{ $sale['created_at']->format('F j, Y h:i A') }}</td>  <!-- Date of sale -->
         </tr>
         @endforeach
     </tbody>
